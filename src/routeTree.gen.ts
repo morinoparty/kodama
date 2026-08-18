@@ -10,11 +10,19 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as Signed_inRouteImport } from './routes/_signed_in'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as Signed_inDashboardIndexRouteImport } from './routes/_signed_in/dashboard/index'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as AuthSignInIndexRouteImport } from './routes/auth/sign-in/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Signed_inRoute = Signed_inRouteImport.update({
+  id: '/_signed_in',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -22,31 +30,66 @@ const AboutRoute = AboutRouteImport.update({
   path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Signed_inDashboardIndexRoute = Signed_inDashboardIndexRouteImport.update({
+  id: '/dashboard/',
+  path: '/dashboard/',
+  getParentRoute: () => Signed_inRoute,
+} as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthSignInIndexRoute = AuthSignInIndexRouteImport.update({
+  id: '/auth/sign-in/',
+  path: '/auth/sign-in/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/dashboard/': typeof Signed_inDashboardIndexRoute
+  '/auth/sign-in/': typeof AuthSignInIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/dashboard': typeof Signed_inDashboardIndexRoute
+  '/auth/sign-in': typeof AuthSignInIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_signed_in': typeof Signed_inRouteWithChildren
   '/about': typeof AboutRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/_signed_in/dashboard/': typeof Signed_inDashboardIndexRoute
+  '/auth/sign-in/': typeof AuthSignInIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about'
+  fullPaths: '/' | '/about' | '/api/auth/$' | '/dashboard/' | '/auth/sign-in/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about'
-  id: '__root__' | '/' | '/about'
+  to: '/' | '/about' | '/api/auth/$' | '/dashboard' | '/auth/sign-in'
+  id:
+    | '__root__'
+    | '/'
+    | '/_signed_in'
+    | '/about'
+    | '/api/auth/$'
+    | '/_signed_in/dashboard/'
+    | '/auth/sign-in/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  Signed_inRoute: typeof Signed_inRouteWithChildren
   AboutRoute: typeof AboutRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  AuthSignInIndexRoute: typeof AuthSignInIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -58,6 +101,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_signed_in': {
+      id: '/_signed_in'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof Signed_inRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/about': {
       id: '/about'
       path: '/about'
@@ -65,12 +115,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_signed_in/dashboard/': {
+      id: '/_signed_in/dashboard/'
+      path: '/dashboard'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof Signed_inDashboardIndexRouteImport
+      parentRoute: typeof Signed_inRoute
+    }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/sign-in/': {
+      id: '/auth/sign-in/'
+      path: '/auth/sign-in'
+      fullPath: '/auth/sign-in/'
+      preLoaderRoute: typeof AuthSignInIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface Signed_inRouteChildren {
+  Signed_inDashboardIndexRoute: typeof Signed_inDashboardIndexRoute
+}
+
+const Signed_inRouteChildren: Signed_inRouteChildren = {
+  Signed_inDashboardIndexRoute: Signed_inDashboardIndexRoute,
+}
+
+const Signed_inRouteWithChildren = Signed_inRoute._addFileChildren(
+  Signed_inRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  Signed_inRoute: Signed_inRouteWithChildren,
   AboutRoute: AboutRoute,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
+  AuthSignInIndexRoute: AuthSignInIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

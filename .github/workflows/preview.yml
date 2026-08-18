@@ -1,0 +1,198 @@
+name: Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  # R2 は S3 互換 API なので aws-cli をそのまま使う。
+  AWS_EC2_METADATA_DISABLED: true
+  AWS_REGION: auto
+  AWS_CLI_FILE_ENCODING: UTF-8
+  AWS_DEFAULT_S3_SIGNATURE_VERSION: s3v4
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  S3_UPLOAD_BUCKET: ${{ secrets.S3_UPLOAD_BUCKET }}
+  S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}
+  # アップロード先バケットが公開されているドメイン。
+  PREVIEW_BASE_URL: https://moripa-ci.nikomaru.dev/kodama
+  # S3 とプレビュー URL で共通利用するプロジェクトのパスプレフィックス。
+  PROJECT_PATH: kodama
+
+jobs:
+  deploy-preview:
+    name: Deploy Preview
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      deployment_url: ${{ steps.resolve-preview-url.outputs.deployment_url }}
+      commit_sha: ${{ steps.vars.outputs.commit_sha }}
+    steps:
+      - uses: actions/checkout@v7
+
+      # プレビュー成果物の置き場所はコミット単位。PR ではマージコミットではなく、
+      # PR のブランチ先頭のコミットを使う(PR のコミットハッシュと一致させるため)。
+      - name: Set short commit SHA
+        id: vars
+        run: |
+          sha="${{ github.event.pull_request.head.sha || github.sha }}"
+          echo "commit_sha=${sha:0:7}" >> "$GITHUB_OUTPUT"
+
+      - uses: pnpm/action-setup@v6
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: pnpm
+          cache-dependency-path: ./pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build
+
+      # デプロイトークンは BSM morinoparty プロジェクトの shared/CLOUDFLARE_API_TOKEN から取得
+      # (Secrets Store バインディング付きデプロイには Secrets Store Edit 権限が必要なため)
+      - name: Get deploy token from Bitwarden Secrets Manager
+        uses: bitwarden/sm-action@v3.0.1
+        with:
+          access_token: ${{ secrets.NIKOMARU_BITWARDEN_SECRET_MANAGER_ACCESS_TOKEN }}
+          secrets: |
+            d1a5c5d9-41cc-48f0-9035-b49901583491 > CLOUDFLARE_API_TOKEN
+
+      # sm-action は env にしか出さないため、wrangler-action の with: から参照できるよう output 化
+      - name: Expose deploy token as step output
+        id: bws-deploy
+        run: echo "cloudflare_api_token=$CLOUDFLARE_API_TOKEN" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy preview
+        id: deploy-preview
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ steps.bws-deploy.outputs.cloudflare_api_token }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          # 本番 worker (kodama) の未昇格バージョンとしてアップロードし、preview URL を得る
+          command: versions upload --message "Deployed by GitHub Actions branch ${{ github.ref_name }}"
+
+      - name: Resolve preview URL
+        id: resolve-preview-url
+        env:
+          WRANGLER_DEPLOYMENT_URL: ${{ steps.deploy-preview.outputs.deployment-url }}
+          WRANGLER_COMMAND_OUTPUT: ${{ steps.deploy-preview.outputs.command-output }}
+          WRANGLER_COMMAND_STDERR: ${{ steps.deploy-preview.outputs.command-stderr }}
+        run: |
+          url="$WRANGLER_DEPLOYMENT_URL"
+          if [ -z "$url" ]; then
+            output="$WRANGLER_COMMAND_OUTPUT"$'\n'"$WRANGLER_COMMAND_STDERR"
+            url=$(echo "$output" | grep -Eo 'https://[^[:space:]]+' | head -n 1 || true)
+          fi
+
+          if [ -z "$url" ]; then
+            echo "Failed to resolve the preview URL from wrangler-action outputs."
+            exit 1
+          fi
+
+          echo "deployment_url=$url" >> "$GITHUB_OUTPUT"
+
+  comment:
+    name: Comment Preview URL
+    needs: deploy-preview
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # QR が作れなくてもプレビュー URL のコメントは出したいので、失敗しても続行する。
+      - name: Install qrencode
+        continue-on-error: true
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq qrencode
+
+      # GitHub の Markdown は data: URI の画像を表示しないため、QR は R2 へ置いて参照する。
+      - name: Render and upload QR code
+        id: qr
+        env:
+          COMMIT_SHORT_SHA: ${{ needs.deploy-preview.outputs.commit_sha }}
+          PREVIEW_URL: ${{ needs.deploy-preview.outputs.deployment_url }}
+        run: |
+          # QR は補助情報なので、生成や配置に失敗してもコメント投稿までは止めない。
+          # 文字列は引数ではなく stdin へ渡し、URL が - で始まる場合でも壊れないようにする。
+          [ -n "$PREVIEW_URL" ] || exit 0
+
+          if ! printf '%s' "$PREVIEW_URL" | qrencode -o app.png -s 6 -m 2; then
+            echo "::warning::failed to render the preview QR code"
+            exit 0
+          fi
+          if [ ! -s app.png ]; then
+            echo "::warning::the rendered preview QR code is empty"
+            exit 0
+          fi
+
+          if ! aws s3 cp app.png \
+            "s3://${S3_UPLOAD_BUCKET}/${PROJECT_PATH}/${COMMIT_SHORT_SHA}/qr/app.png" \
+            --endpoint-url "${S3_ENDPOINT}" \
+            --content-type image/png \
+            --only-show-errors; then
+            echo "::warning::failed to upload the preview QR code"
+            exit 0
+          fi
+
+          echo "qr_url=${PREVIEW_BASE_URL}/${COMMIT_SHORT_SHA}/qr/app.png" >> "$GITHUB_OUTPUT"
+
+      - name: Create comment file
+        env:
+          PREVIEW_URL: ${{ needs.deploy-preview.outputs.deployment_url }}
+          QR_URL: ${{ steps.qr.outputs.qr_url }}
+        run: |
+          cat << 'EOF' > comment.md
+          ## 🚀 Deploy preview
+
+          | Target | URL | QR |
+          | --- | --- | --- |
+          EOF
+
+          # URL が無い場合も行は残し、状態が読み取れるようにする。
+          if [ -z "$PREVIEW_URL" ]; then
+            printf '| App | Not available | — |\n' >> comment.md
+          elif [ -n "$QR_URL" ]; then
+            printf '| App | <%s> | <img src="%s" width="120" height="120" alt="App preview QR code"> |\n' \
+              "$PREVIEW_URL" "$QR_URL" >> comment.md
+          else
+            printf '| App | <%s> | — |\n' "$PREVIEW_URL" >> comment.md
+          fi
+
+          cat << 'EOF' >> comment.md
+
+          スマートフォンから開く場合は QR を読み取ってください。
+          EOF
+
+      # push のたびにコメントが増えないよう、同じコメントを上書きしていく。
+      - name: Create PR comment
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # comment ジョブは checkout しないため .git が無い。gh がリポジトリを
+          # git から推測できず失敗するので、GH_REPO で対象リポジトリを明示する。
+          GH_REPO: ${{ github.repository }}
+        run: |
+          # GitHub API が一時的に 503 を返すことがあるため数回まで再試行する。
+          for attempt in 1 2 3; do
+            if gh pr comment "${{ github.event.number }}" \
+              --body-file comment.md --edit-last --create-if-none; then
+              exit 0
+            fi
+            sleep $((attempt * 10))
+          done
+          echo "Failed to post the preview comment after 3 attempts."
+          exit 1
