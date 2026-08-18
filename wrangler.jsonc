@@ -3,43 +3,57 @@
  * https://developers.cloudflare.com/workers/wrangler/configuration/
  */
 {
-	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "kodama",
-	"compatibility_date": "2025-09-02",
-	"compatibility_flags": [
-		"nodejs_compat"
-	],
-	"main": "@tanstack/react-start/server-entry",
-	"observability": {
-		"enabled": true
-	},
-	"upload_source_maps": true
-	/**
-	 * Smart Placement
-	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
-	 */
-	// "placement": {  "mode": "smart" }
-	/**
-	 * Bindings
-	 * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
-	 * databases, object storage, AI inference, real-time communication and more.
-	 * https://developers.cloudflare.com/workers/runtime-apis/bindings/
-	 */
-	/**
-	 * Environment Variables
-	 * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
-	 * Note: Use secrets to store sensitive data.
-	 * https://developers.cloudflare.com/workers/configuration/secrets/
-	 */
-	// "vars": {  "MY_VARIABLE": "production_value" }
-	/**
-	 * Static Assets
-	 * https://developers.cloudflare.com/workers/static-assets/binding/
-	 */
-	// "assets": {  "directory": "./public/",  "binding": "ASSETS" }
-	/**
-	 * Service Bindings (communicate between multiple Workers)
-	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
-	 */
-	// "services": [  {   "binding": "MY_SERVICE",   "service": "my-service"  } ]
+    "$schema": "node_modules/wrangler/config-schema.json",
+    "name": "kodama",
+    "compatibility_date": "2025-09-02",
+    "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+    "main": "@tanstack/react-start/server-entry",
+    "observability": {
+        "enabled": true
+    },
+    "upload_source_maps": true,
+    // 本番の公開ドメイン。Cloudflare 側に custom domain として登録される
+    "routes": [
+        {
+            "pattern": "kodama.moripa.nikomaru.dev",
+            "custom_domain": true
+        }
+    ],
+    // PR ごとの preview は `wrangler versions upload` の未昇格バージョン + preview URL で行う
+    "preview_urls": true,
+    "vars": {
+        // TODO: kodama 用の MineAuth OIDC クライアントを登録して差し替える。
+        // リダイレクト URI は `<origin>/api/auth/callback/MineAuth`
+        // (本番: https://kodama.moripa.nikomaru.dev/api/auth/callback/MineAuth)
+        "CLIENT_ID": "REPLACE_WITH_KODAMA_MINEAUTH_CLIENT_ID",
+        // MineAuth (OIDC プロバイダー) のベース URL
+        "MAIN_SERVER_URL": "https://api.morino.party/main",
+        // 各 Minecraft サーバーの API ベース URL
+        "SERVER_URL": "https://api.morino.party/",
+        // 管理対象サーバーの一覧
+        "SERVERS": "main,res,lobby"
+    },
+    // AUTH_SECRET は Cloudflare Secrets Store (BSM: shared/AUTH_SECRET) から供給する。
+    "secrets_store_secrets": [
+        {
+            "binding": "AUTH_SECRET",
+            "store_id": "d36d5a11ea07462c83bb21a0e9ccb811",
+            "secret_name": "shared_AUTH_SECRET"
+        }
+    ]
+    /**
+     * Smart Placement
+     * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
+     */
+    // "placement": {  "mode": "smart" }
+    /**
+     * Static Assets
+     * https://developers.cloudflare.com/workers/static-assets/binding/
+     */
+    // "assets": {  "directory": "./public/",  "binding": "ASSETS" }
+    /**
+     * Service Bindings (communicate between multiple Workers)
+     * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
+     */
+    // "services": [  {   "binding": "MY_SERVICE",   "service": "my-service"  } ]
 }
