@@ -173,12 +173,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      # QR が作れなくてもプレビュー URL のコメントは出したいので、失敗しても続行する。
-      - name: Install qrencode
-        continue-on-error: true
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq qrencode
+      # QR の生成には Node の qrcode CLI を pnpm dlx で使う。
+      # apt-get はランナーによって数分待たされることがあるため頼らない
+      - uses: pnpm/action-setup@v6
+        name: Install pnpm
+        with:
+          version: 10
+          run_install: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
 
       # GitHub の Markdown は data: URI の画像を表示しないため、QR は R2 へ置いて参照する。
       - name: Render and upload QR codes
@@ -189,14 +194,14 @@ jobs:
           STORYBOOK_PREVIEW_URL: ${{ needs.deploy-preview.outputs.storybook_deployment_url }}
         run: |
           # QR は補助情報なので、生成や配置に失敗してもコメント投稿までは止めない。
-          # 文字列は引数ではなく stdin へ渡し、URL が - で始まる場合でも壊れないようにする。
+          # URL が - で始まっても引数として解釈されないよう -- で区切る。
           # アップロード先は行ごとに分ける (qr/app.png と qr/storybook.png)。
           upload_qr() {
             name="$1"
             url="$2"
             [ -n "$url" ] || return 0
 
-            if ! printf '%s' "$url" | qrencode -o "$name.png" -s 6 -m 2; then
+            if ! pnpm dlx qrcode -o "$name.png" -t png -s 6 -m 2 -- "$url"; then
               echo "::warning::failed to render the $name QR code"
               return 0
             fi
