@@ -98,8 +98,11 @@ jobs:
         id: bws-deploy
         run: echo "cloudflare_api_token=$CLOUDFLARE_API_TOKEN" >> "$GITHUB_OUTPUT"
 
+      # 片方のデプロイが落ちても、もう片方の URL は PR に出したいので
+      # ここでジョブを止めず、後段の URL 解決でまとめて判定する
       - name: Deploy app preview
         id: deploy-app-preview
+        continue-on-error: true
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ steps.bws-deploy.outputs.cloudflare_api_token }}
@@ -108,8 +111,11 @@ jobs:
           # 本番 worker (kodama) の未昇格バージョンとしてアップロードし、preview URL を得る
           command: versions upload --message "Deployed app by GitHub Actions branch ${{ github.ref_name }}"
 
+      # kodama-storybook worker がまだ一度も deploy されていないと
+      # `versions upload` は失敗する。その場合もジョブは続行させる
       - name: Deploy storybook preview
         id: deploy-storybook-preview
+        continue-on-error: true
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ steps.bws-deploy.outputs.cloudflare_api_token }}
@@ -142,19 +148,23 @@ jobs:
             fi
 
             if [ -z "$url" ]; then
-              echo "Failed to resolve the $name preview URL from wrangler-action outputs."
+              echo "::warning::failed to resolve the $name preview URL"
               return 1
             fi
 
             echo "${name}_deployment_url=$url" >> "$GITHUB_OUTPUT"
           }
 
-          # 片方が解決できなくてももう片方の URL は使えるようにするため、
-          # 両方を試してから最後にまとめて失敗させる
-          status=0
-          resolve_url app "$APP_DEPLOYMENT_URL" "$APP_COMMAND_OUTPUT" "$APP_COMMAND_STDERR" || status=1
-          resolve_url storybook "$STORYBOOK_DEPLOYMENT_URL" "$STORYBOOK_COMMAND_OUTPUT" "$STORYBOOK_COMMAND_STDERR" || status=1
-          exit "$status"
+          # 片方だけ落ちたときは警告にとどめ、取れた方の URL を PR に出す。
+          # 両方取れなかったときだけジョブを失敗させる
+          resolved=0
+          resolve_url app "$APP_DEPLOYMENT_URL" "$APP_COMMAND_OUTPUT" "$APP_COMMAND_STDERR" && resolved=1
+          resolve_url storybook "$STORYBOOK_DEPLOYMENT_URL" "$STORYBOOK_COMMAND_OUTPUT" "$STORYBOOK_COMMAND_STDERR" && resolved=1
+
+          if [ "$resolved" -eq 0 ]; then
+            echo "Failed to resolve any preview URL from wrangler-action outputs."
+            exit 1
+          fi
 
   comment:
     name: Comment Preview URL
