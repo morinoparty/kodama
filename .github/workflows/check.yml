@@ -8,6 +8,8 @@ on:
 
 permissions:
   contents: read
+  # @morinoparty/chlorophyll-react を GitHub Packages から取得するために必要
+  packages: read
 
 concurrency:
   group: check-${{ github.event.pull_request.number || github.ref }}
@@ -32,15 +34,33 @@ jobs:
           cache: pnpm
           cache-dependency-path: ./pnpm-lock.yaml
 
+      # private パッケージ (@morinoparty/chlorophyll-react) 取得用の GitHub Packages 認証。
+      # レジストリ指定はリポジトリの .npmrc にあるので、トークン行だけを足す
+      - name: Setup npm auth for GitHub Packages
+        run: echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> .npmrc
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Install
         run: pnpm install --frozen-lockfile
 
-      # Biome の lint / format / import 整列をまとめて検査する (--write はしない)
+      # styled-system は生成物なのでリポジトリに含めていない。
+      # install 時の prepare でも生成されるが、確実に揃えるため明示的に実行する
+      - name: Panda codegen
+        run: pnpm run panda:codegen
+
+      # Biome の lint / format / import 整列をまとめて検査する (--write はしない)。
+      # 設定はワークスペースルートに 1 つなので、ここでまとめて 1 回だけ実行する
       - name: Biome
         run: pnpm run check:ci
 
+      # 型チェックは pnpm -r で app / storybook の両方を回す
       - name: Typecheck
         run: pnpm run typecheck
 
-      - name: Build
+      # app と storybook はビルドの失敗箇所が分かるようステップを分けている
+      - name: Build app
         run: pnpm run build
+
+      - name: Build storybook
+        run: pnpm run build:storybook

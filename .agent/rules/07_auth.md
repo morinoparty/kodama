@@ -13,9 +13,9 @@
 
 ## 実装上のルール
 
-- Better Auth のインスタンスは必ず `src/lib/auth.ts` の `getAuth()` から取得し、`await` してください。
+- Better Auth のインスタンスは必ず `app/src/lib/auth.ts` の `getAuth()` から取得し、`await` してください。
   リクエストコンテキストの外（モジュールトップレベルなど）では呼べません。
-- ログインが必要なページは `src/routes/_signed_in/` 配下に作ってください。
+- ログインが必要なページは `app/src/routes/_signed_in/` 配下に作ってください。
   `_signed_in.tsx` の `server.middleware` が未ログインを弾きます。
 - MineAuth の API を叩くときは `auth.api.getAccessToken({ body: { useAccountCookie: true }, headers })`
   でアクセストークンを取得してください。失効していれば refresh token で自動更新されます。
@@ -23,7 +23,7 @@
 
 ## 環境変数・シークレット
 
-- `CLIENT_ID` / `MAIN_SERVER_URL` / `SERVER_URL` / `SERVERS` は `wrangler.jsonc` の `vars` に定義します。
+- `CLIENT_ID` / `MAIN_SERVER_URL` / `SERVER_URL` / `SERVERS` は `app/wrangler.jsonc` の `vars` に定義します。
 - `AUTH_SECRET` は Cloudflare Secrets Store のバインディング (`shared_AUTH_SECRET`) から供給されます。
   他の env と違い非同期の `.get()` で読み出す必要があります。
 - リダイレクト URI は `<origin>/api/auth/callback/MineAuth` です。

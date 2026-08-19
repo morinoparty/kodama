@@ -1,3 +1,7 @@
+packages:
+  - app
+  - storybook
+
 allowBuilds:
   esbuild: true
   lightningcss: true

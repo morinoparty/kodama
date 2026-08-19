@@ -7,6 +7,8 @@ on:
 permissions:
   contents: read
   pull-requests: write
+  # @morinoparty/chlorophyll-react を GitHub Packages から取得するために必要
+  packages: read
 
 concurrency:
   group: preview-${{ github.event.pull_request.number || github.ref }}
@@ -33,7 +35,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
-      deployment_url: ${{ steps.resolve-preview-url.outputs.deployment_url }}
+      app_deployment_url: ${{ steps.resolve-preview-urls.outputs.app_deployment_url }}
+      storybook_deployment_url: ${{ steps.resolve-preview-urls.outputs.storybook_deployment_url }}
       commit_sha: ${{ steps.vars.outputs.commit_sha }}
     steps:
       - uses: actions/checkout@v7
@@ -57,11 +60,29 @@ jobs:
           cache: pnpm
           cache-dependency-path: ./pnpm-lock.yaml
 
+      # private パッケージ (@morinoparty/chlorophyll-react) 取得用の GitHub Packages 認証。
+      # レジストリ指定はリポジトリの .npmrc にあるので、トークン行だけを足す
+      - name: Setup npm auth for GitHub Packages
+        run: echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> .npmrc
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Install
         run: pnpm install --frozen-lockfile
 
+      # styled-system は生成物なのでリポジトリに含めていない。
+      # install 時の prepare でも生成されるが、確実に揃えるため明示的に実行する
+      - name: Panda codegen
+        run: pnpm run panda:codegen
+
+      # サイドバーのフッターに出すデプロイ時刻。ビルド時に埋め込まれる
+      - name: Set deployment metadata
+        run: echo "VITE_DEPLOYED_AT=$(date -u +%Y-%m-%dT%H:%M:%S.000Z)" >> "$GITHUB_ENV"
+
+      # app と storybook をまとめてビルドする。storybook worker は storybook-static を
+      # 静的アセットとして配信するため、アップロード前にビルドしておく必要がある
       - name: Build
-        run: pnpm run build
+        run: pnpm run build:all
 
       # デプロイトークンは BSM morinoparty プロジェクトの shared/CLOUDFLARE_API_TOKEN から取得
       # (Secrets Store バインディング付きデプロイには Secrets Store Edit 権限が必要なため)
@@ -77,34 +98,63 @@ jobs:
         id: bws-deploy
         run: echo "cloudflare_api_token=$CLOUDFLARE_API_TOKEN" >> "$GITHUB_OUTPUT"
 
-      - name: Deploy preview
-        id: deploy-preview
+      - name: Deploy app preview
+        id: deploy-app-preview
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ steps.bws-deploy.outputs.cloudflare_api_token }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          workingDirectory: app
           # 本番 worker (kodama) の未昇格バージョンとしてアップロードし、preview URL を得る
-          command: versions upload --message "Deployed by GitHub Actions branch ${{ github.ref_name }}"
+          command: versions upload --message "Deployed app by GitHub Actions branch ${{ github.ref_name }}"
 
-      - name: Resolve preview URL
-        id: resolve-preview-url
+      - name: Deploy storybook preview
+        id: deploy-storybook-preview
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ steps.bws-deploy.outputs.cloudflare_api_token }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          workingDirectory: storybook
+          # 本番 worker (kodama-storybook) の未昇格バージョンとしてアップロードし、preview URL を得る
+          command: versions upload --message "Deployed storybook by GitHub Actions branch ${{ github.ref_name }}"
+
+      # wrangler-action の deployment-url output が空になることがあるため、
+      # そのときは wrangler のログから URL を拾う。app / storybook の両方に同じ処理を適用する
+      - name: Resolve preview URLs
+        id: resolve-preview-urls
         env:
-          WRANGLER_DEPLOYMENT_URL: ${{ steps.deploy-preview.outputs.deployment-url }}
-          WRANGLER_COMMAND_OUTPUT: ${{ steps.deploy-preview.outputs.command-output }}
-          WRANGLER_COMMAND_STDERR: ${{ steps.deploy-preview.outputs.command-stderr }}
+          APP_DEPLOYMENT_URL: ${{ steps.deploy-app-preview.outputs.deployment-url }}
+          APP_COMMAND_OUTPUT: ${{ steps.deploy-app-preview.outputs.command-output }}
+          APP_COMMAND_STDERR: ${{ steps.deploy-app-preview.outputs.command-stderr }}
+          STORYBOOK_DEPLOYMENT_URL: ${{ steps.deploy-storybook-preview.outputs.deployment-url }}
+          STORYBOOK_COMMAND_OUTPUT: ${{ steps.deploy-storybook-preview.outputs.command-output }}
+          STORYBOOK_COMMAND_STDERR: ${{ steps.deploy-storybook-preview.outputs.command-stderr }}
         run: |
-          url="$WRANGLER_DEPLOYMENT_URL"
-          if [ -z "$url" ]; then
-            output="$WRANGLER_COMMAND_OUTPUT"$'\n'"$WRANGLER_COMMAND_STDERR"
-            url=$(echo "$output" | grep -Eo 'https://[^[:space:]]+' | head -n 1 || true)
-          fi
+          resolve_url() {
+            name="$1"
+            url="$2"
+            output="$3"
+            stderr="$4"
 
-          if [ -z "$url" ]; then
-            echo "Failed to resolve the preview URL from wrangler-action outputs."
-            exit 1
-          fi
+            if [ -z "$url" ]; then
+              url=$(printf '%s\n%s\n' "$output" "$stderr" \
+                | grep -Eo 'https://[^[:space:]]+' | head -n 1 || true)
+            fi
 
-          echo "deployment_url=$url" >> "$GITHUB_OUTPUT"
+            if [ -z "$url" ]; then
+              echo "Failed to resolve the $name preview URL from wrangler-action outputs."
+              return 1
+            fi
+
+            echo "${name}_deployment_url=$url" >> "$GITHUB_OUTPUT"
+          }
+
+          # 片方が解決できなくてももう片方の URL は使えるようにするため、
+          # 両方を試してから最後にまとめて失敗させる
+          status=0
+          resolve_url app "$APP_DEPLOYMENT_URL" "$APP_COMMAND_OUTPUT" "$APP_COMMAND_STDERR" || status=1
+          resolve_url storybook "$STORYBOOK_DEPLOYMENT_URL" "$STORYBOOK_COMMAND_OUTPUT" "$STORYBOOK_COMMAND_STDERR" || status=1
+          exit "$status"
 
   comment:
     name: Comment Preview URL
@@ -121,41 +171,69 @@ jobs:
           sudo apt-get install -y -qq qrencode
 
       # GitHub の Markdown は data: URI の画像を表示しないため、QR は R2 へ置いて参照する。
-      - name: Render and upload QR code
+      - name: Render and upload QR codes
         id: qr
         env:
           COMMIT_SHORT_SHA: ${{ needs.deploy-preview.outputs.commit_sha }}
-          PREVIEW_URL: ${{ needs.deploy-preview.outputs.deployment_url }}
+          APP_PREVIEW_URL: ${{ needs.deploy-preview.outputs.app_deployment_url }}
+          STORYBOOK_PREVIEW_URL: ${{ needs.deploy-preview.outputs.storybook_deployment_url }}
         run: |
           # QR は補助情報なので、生成や配置に失敗してもコメント投稿までは止めない。
           # 文字列は引数ではなく stdin へ渡し、URL が - で始まる場合でも壊れないようにする。
-          [ -n "$PREVIEW_URL" ] || exit 0
+          # アップロード先は行ごとに分ける (qr/app.png と qr/storybook.png)。
+          upload_qr() {
+            name="$1"
+            url="$2"
+            [ -n "$url" ] || return 0
 
-          if ! printf '%s' "$PREVIEW_URL" | qrencode -o app.png -s 6 -m 2; then
-            echo "::warning::failed to render the preview QR code"
-            exit 0
-          fi
-          if [ ! -s app.png ]; then
-            echo "::warning::the rendered preview QR code is empty"
-            exit 0
-          fi
+            if ! printf '%s' "$url" | qrencode -o "$name.png" -s 6 -m 2; then
+              echo "::warning::failed to render the $name QR code"
+              return 0
+            fi
+            if [ ! -s "$name.png" ]; then
+              echo "::warning::the rendered $name QR code is empty"
+              return 0
+            fi
 
-          if ! aws s3 cp app.png \
-            "s3://${S3_UPLOAD_BUCKET}/${PROJECT_PATH}/${COMMIT_SHORT_SHA}/qr/app.png" \
-            --endpoint-url "${S3_ENDPOINT}" \
-            --content-type image/png \
-            --only-show-errors; then
-            echo "::warning::failed to upload the preview QR code"
-            exit 0
-          fi
+            if ! aws s3 cp "$name.png" \
+              "s3://${S3_UPLOAD_BUCKET}/${PROJECT_PATH}/${COMMIT_SHORT_SHA}/qr/$name.png" \
+              --endpoint-url "${S3_ENDPOINT}" \
+              --content-type image/png \
+              --only-show-errors; then
+              echo "::warning::failed to upload the $name QR code"
+              return 0
+            fi
 
-          echo "qr_url=${PREVIEW_BASE_URL}/${COMMIT_SHORT_SHA}/qr/app.png" >> "$GITHUB_OUTPUT"
+            echo "${name}_qr_url=${PREVIEW_BASE_URL}/${COMMIT_SHORT_SHA}/qr/$name.png" >> "$GITHUB_OUTPUT"
+          }
+
+          upload_qr app "$APP_PREVIEW_URL"
+          upload_qr storybook "$STORYBOOK_PREVIEW_URL"
 
       - name: Create comment file
         env:
-          PREVIEW_URL: ${{ needs.deploy-preview.outputs.deployment_url }}
-          QR_URL: ${{ steps.qr.outputs.qr_url }}
+          APP_PREVIEW_URL: ${{ needs.deploy-preview.outputs.app_deployment_url }}
+          STORYBOOK_PREVIEW_URL: ${{ needs.deploy-preview.outputs.storybook_deployment_url }}
+          APP_QR_URL: ${{ steps.qr.outputs.app_qr_url }}
+          STORYBOOK_QR_URL: ${{ steps.qr.outputs.storybook_qr_url }}
         run: |
+          # 表の 1 行を組み立てる。URL が無い場合も行は残し、状態が読み取れるようにする。
+          row() {
+            label="$1"
+            url="$2"
+            qr="$3"
+            if [ -z "$url" ]; then
+              printf '| %s | Not available | — |\n' "$label" >> comment.md
+              return
+            fi
+            if [ -n "$qr" ]; then
+              printf '| %s | <%s> | <img src="%s" width="120" height="120" alt="%s preview QR code"> |\n' \
+                "$label" "$url" "$qr" "$label" >> comment.md
+            else
+              printf '| %s | <%s> | — |\n' "$label" "$url" >> comment.md
+            fi
+          }
+
           cat << 'EOF' > comment.md
           ## 🚀 Deploy preview
 
@@ -163,15 +241,8 @@ jobs:
           | --- | --- | --- |
           EOF
 
-          # URL が無い場合も行は残し、状態が読み取れるようにする。
-          if [ -z "$PREVIEW_URL" ]; then
-            printf '| App | Not available | — |\n' >> comment.md
-          elif [ -n "$QR_URL" ]; then
-            printf '| App | <%s> | <img src="%s" width="120" height="120" alt="App preview QR code"> |\n' \
-              "$PREVIEW_URL" "$QR_URL" >> comment.md
-          else
-            printf '| App | <%s> | — |\n' "$PREVIEW_URL" >> comment.md
-          fi
+          row App "$APP_PREVIEW_URL" "$APP_QR_URL"
+          row Storybook "$STORYBOOK_PREVIEW_URL" "$STORYBOOK_QR_URL"
 
           cat << 'EOF' >> comment.md
 
