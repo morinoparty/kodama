@@ -22,10 +22,10 @@
     // PR ごとの preview は `wrangler versions upload` の未昇格バージョン + preview URL で行う
     "preview_urls": true,
     "vars": {
-        // TODO: kodama 用の MineAuth OIDC クライアントを登録して差し替える。
+        // kodama 用の MineAuth OIDC クライアント。
         // リダイレクト URI は `<origin>/api/auth/callback/MineAuth`
         // (本番: https://kodama.moripa.nikomaru.dev/api/auth/callback/MineAuth)
-        "CLIENT_ID": "REPLACE_WITH_KODAMA_MINEAUTH_CLIENT_ID",
+        "CLIENT_ID": "01a018fc-3495-755e-9782-eadc5a6038e6",
         // MineAuth (OIDC プロバイダー) のベース URL
         "MAIN_SERVER_URL": "https://api.morino.party/main",
         // 各 Minecraft サーバーの API ベース URL
