@@ -23,14 +23,26 @@ const RenderStory = () => {
     return storyFn();
 };
 
-// アプリで実在するパスを列挙する。ここに無いパスへの Link は解決できない
-const paths = ["/", "/auth/sign-in"] as const;
+// アプリで実在するパス。ここに無いパスへの Link は解決できない
+const APP_PATHS = ["/", "/auth/sign-in"] as const;
+
+// アプリにはまだ無いが、階層のあるパンくずを story で見せるための仮のパス。
+// 実際のページが増えたらこちらから APP_PATHS へ移す
+const STORY_PATHS = ["/plugins", "/rail", "/rail/lines"] as const;
+
+const paths = [...APP_PATHS, ...STORY_PATHS];
 
 // パンくず (AppBreadcrumb) は route の staticData から組み立てるので、
 // story でもアプリと同じ形で段を持たせておく
-const BREADCRUMBS: Record<(typeof paths)[number], readonly Breadcrumb[]> = {
+const BREADCRUMBS: Record<
+    (typeof APP_PATHS | typeof STORY_PATHS)[number],
+    readonly Breadcrumb[]
+> = {
     "/": [{ label: "ホーム" }],
     "/auth/sign-in": [{ label: "サインイン" }],
+    "/plugins": [{ label: "プラグイン" }],
+    "/rail": [{ label: "鉄道" }],
+    "/rail/lines": [{ label: "鉄道", to: "/rail" }, { label: "路線" }],
 };
 
 const routes = paths.map((path) =>

@@ -38,14 +38,20 @@ export function AppBreadcrumb() {
                         >
                             {index > 0 ? <Breadcrumb.Separator /> : null}
                             <Breadcrumb.Item>
-                                {isCurrent || !breadcrumb.to ? (
+                                {/* 現在地を名乗るのは末尾だけ。途中でリンク先を
+                                    持たない段は、ただの文字として描く */}
+                                {isCurrent ? (
                                     <Breadcrumb.Page>
                                         {breadcrumb.label}
                                     </Breadcrumb.Page>
-                                ) : (
+                                ) : breadcrumb.to ? (
                                     <Breadcrumb.Link to={breadcrumb.to}>
                                         {breadcrumb.label}
                                     </Breadcrumb.Link>
+                                ) : (
+                                    <Breadcrumb.Text>
+                                        {breadcrumb.label}
+                                    </Breadcrumb.Text>
                                 )}
                             </Breadcrumb.Item>
                         </Fragment>

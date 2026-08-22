@@ -38,21 +38,38 @@ export const Single: Story = {
     ),
 };
 
-/** 祖先がリンクになり、末尾だけが現在地として描かれる */
+/** 祖先がリンクになり、末尾だけが現在地 (aria-current="page") として描かれる */
 export const Nested: Story = {
     render: () => (
         <Breadcrumb.Root>
             <Breadcrumb.List>
                 <Breadcrumb.Item>
-                    <Breadcrumb.Link to="/">ホーム</Breadcrumb.Link>
-                </Breadcrumb.Item>
-                <Breadcrumb.Separator />
-                <Breadcrumb.Item>
-                    <Breadcrumb.Link to="/">プラグイン</Breadcrumb.Link>
+                    <Breadcrumb.Link to="/plugins">プラグイン</Breadcrumb.Link>
                 </Breadcrumb.Item>
                 <Breadcrumb.Separator />
                 <Breadcrumb.Item>
                     <Breadcrumb.Page>Chlorophyll</Breadcrumb.Page>
+                </Breadcrumb.Item>
+            </Breadcrumb.List>
+        </Breadcrumb.Root>
+    ),
+};
+
+/** 画面を持たない階層は Text で描く。リンクにも現在地にもならない */
+export const WithoutLink: Story = {
+    render: () => (
+        <Breadcrumb.Root>
+            <Breadcrumb.List>
+                <Breadcrumb.Item>
+                    <Breadcrumb.Text>鉄道</Breadcrumb.Text>
+                </Breadcrumb.Item>
+                <Breadcrumb.Separator />
+                <Breadcrumb.Item>
+                    <Breadcrumb.Link to="/rail/lines">路線</Breadcrumb.Link>
+                </Breadcrumb.Item>
+                <Breadcrumb.Separator />
+                <Breadcrumb.Item>
+                    <Breadcrumb.Page>もりのパーティ本線</Breadcrumb.Page>
                 </Breadcrumb.Item>
             </Breadcrumb.List>
         </Breadcrumb.Root>
@@ -66,15 +83,17 @@ export const Wrapped: Story = {
             <Breadcrumb.Root>
                 <Breadcrumb.List>
                     <Breadcrumb.Item>
-                        <Breadcrumb.Link to="/">ホーム</Breadcrumb.Link>
+                        <Breadcrumb.Link to="/plugins">
+                            プラグイン
+                        </Breadcrumb.Link>
                     </Breadcrumb.Item>
                     <Breadcrumb.Separator />
                     <Breadcrumb.Item>
-                        <Breadcrumb.Link to="/">鉄道</Breadcrumb.Link>
+                        <Breadcrumb.Link to="/rail">鉄道</Breadcrumb.Link>
                     </Breadcrumb.Item>
                     <Breadcrumb.Separator />
                     <Breadcrumb.Item>
-                        <Breadcrumb.Link to="/">路線</Breadcrumb.Link>
+                        <Breadcrumb.Link to="/rail/lines">路線</Breadcrumb.Link>
                     </Breadcrumb.Item>
                     <Breadcrumb.Separator />
                     <Breadcrumb.Item>

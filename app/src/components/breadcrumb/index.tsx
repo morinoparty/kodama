@@ -35,11 +35,13 @@ const linkStyle = css({
     transitionDuration: "fast",
     transitionTimingFunction: "easeInOut",
     _hover: { color: "fg" },
+    // outline: "none" + ringWidth の組み合わせだと outline-style が none のまま
+    // 残り、フォーカスリングが一切描かれない。longhand で style まで指定する
     _focusVisible: {
-        outline: "none",
-        ringWidth: "2",
-        ringColor: "colorPalette.focus.ring",
-        ringOffset: "0",
+        outlineStyle: "solid",
+        outlineWidth: "2px",
+        outlineColor: "colorPalette.focus.ring",
+        outlineOffset: "2px",
     },
 });
 
@@ -73,17 +75,36 @@ const Item = ({ className, ...props }: ComponentProps<"li">) => (
     <li className={cx(itemStyle, className)} {...props} />
 );
 
-/** 祖先の段。SPA 内の遷移なので TanStack Router の Link を使う */
+/**
+ * 祖先の段。SPA 内の遷移なので TanStack Router の Link を使う。
+ *
+ * Link は「現在地の前方一致」で active と判定すると aria-current="page" を
+ * 強制的に付ける。パンくずの祖先は必ず現在地の前方一致になるため、
+ * そのままだと段のいくつもが「現在のページ」を名乗ってしまう。
+ * exact 一致に絞ることで、現在地を表すのは末尾の Page だけになる。
+ */
 const BreadcrumbLink = ({
     className,
     ...props
 }: LinkProps & { className?: string }) => (
-    <Link className={cx(linkStyle, className)} {...props} />
+    <Link
+        activeOptions={{ exact: true }}
+        className={cx(linkStyle, className)}
+        {...props}
+    />
 );
 
 /** 現在地の段。リンクにはせず aria-current で現在地であることを伝える */
 const Page = ({ className, ...props }: ComponentProps<"span">) => (
     <span aria-current="page" className={cx(pageStyle, className)} {...props} />
+);
+
+/**
+ * リンク先を持たない途中の段。現在地ではないので aria-current は付けない。
+ * サイドバーの区分名のように、画面を持たない階層を表すときに使う
+ */
+const Text = ({ className, ...props }: ComponentProps<"span">) => (
+    <span className={cx(linkStyle, className)} {...props} />
 );
 
 /**
@@ -128,5 +149,6 @@ export const Breadcrumb = {
     Item,
     Link: BreadcrumbLink,
     Page,
+    Text,
     Separator,
 };

@@ -74,11 +74,13 @@ const brandStyle = css({
     textDecoration: "none",
     color: "fg",
     _hover: { bg: "bg.muted" },
+    // outline: "none" だと outline-style が none のまま残り、
+    // ringWidth を足してもフォーカスリングが描かれない
     _focusVisible: {
-        outline: "none",
-        ringWidth: "2",
-        ringColor: "colorPalette.focus.ring",
-        ringOffset: "0",
+        outlineStyle: "solid",
+        outlineWidth: "2px",
+        outlineColor: "colorPalette.focus.ring",
+        outlineOffset: "2px",
     },
 });
 
@@ -160,11 +162,13 @@ const navLinkStyle = css({
         bg: "bg.muted",
         color: "fg",
     },
+    // outline: "none" だと outline-style が none のまま残り、
+    // ringWidth を足してもフォーカスリングが描かれない
     _focusVisible: {
-        outline: "none",
-        ringWidth: "2",
-        ringColor: "colorPalette.focus.ring",
-        ringOffset: "0",
+        outlineStyle: "solid",
+        outlineWidth: "2px",
+        outlineColor: "colorPalette.focus.ring",
+        outlineOffset: "2px",
     },
     "&[aria-current='page']": {
         bg: "colorPalette.bg.subtle",
