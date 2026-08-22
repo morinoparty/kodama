@@ -7,10 +7,14 @@ import { css, cx } from "styled-system/css";
 // セマンティックな HTML (nav > ol > li) に Panda のトークンでスタイルを当てて自作する。
 // Chlorophyll 側への追加は morinoparty/Chlorophyll#76 で提案している。
 
+// パンくずは折り返さず 1 行に保つ。折り返すと高さが決まっているヘッダーから
+// はみ出してしまうため、width: max-content で内容分の幅を持たせ、
+// 入り切らない分は外側のスクロールコンテナに吸収してもらう
 const listStyle = css({
     display: "flex",
     alignItems: "center",
-    flexWrap: "wrap",
+    flexWrap: "nowrap",
+    width: "max-content",
     gap: "1.5",
     listStyle: "none",
     margin: "0",

@@ -2,8 +2,14 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { css } from "styled-system/css";
 import { Breadcrumb } from "@/components/breadcrumb";
 
-// 折り返しを確認するため、あえて幅を絞る枠
-const narrowStyle = css({ maxWidth: "72" });
+// 入り切らないときの挙動を確認するため、あえて幅を絞ったスクロール枠。
+// ヘッダー (AppHeader) でも同じように横スクロールで吸収している
+const narrowStyle = css({
+    maxWidth: "72",
+    overflowX: "auto",
+    scrollbarWidth: "none",
+    "&::-webkit-scrollbar": { display: "none" },
+});
 
 const meta = {
     title: "Components/Breadcrumb",
@@ -76,8 +82,8 @@ export const WithoutLink: Story = {
     ),
 };
 
-/** 幅が足りないときは折り返す。ヘッダーでは横スクロールで吸収する */
-export const Wrapped: Story = {
+/** 幅が足りないときは折り返さず、1 行のまま横スクロールする */
+export const Overflow: Story = {
     render: () => (
         <div className={narrowStyle}>
             <Breadcrumb.Root>

@@ -3,9 +3,15 @@ import {
     type ReactNode,
     useCallback,
     useContext,
+    useEffect,
     useMemo,
     useState,
 } from "react";
+import { token } from "styled-system/tokens";
+
+// サイドバーが常時表示に切り替わる幅。Panda のトークンから引いて、
+// CSS 側のブレークポイントと値がずれないようにする
+const DESKTOP_MEDIA_QUERY = `(min-width: ${token("breakpoints.lg")})`;
 
 interface SidebarContextValue {
     /** lg 以上で常時表示のサイドバーを開いているか */
@@ -32,6 +38,21 @@ const SidebarContext = createContext<SidebarContextValue | undefined>(
 export function SidebarProvider({ children }: { children: ReactNode }) {
     const [isDesktopOpen, setIsDesktopOpen] = useState(true);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+    // 画面が lg 以上へ広がったとき、開いたままの Drawer が常時表示の
+    // サイドバーと二重に出てしまうので閉じる
+    useEffect(() => {
+        const query = window.matchMedia(DESKTOP_MEDIA_QUERY);
+        const closeOnDesktop = () => {
+            if (query.matches) {
+                setIsMobileOpen(false);
+            }
+        };
+
+        closeOnDesktop();
+        query.addEventListener("change", closeOnDesktop);
+        return () => query.removeEventListener("change", closeOnDesktop);
+    }, []);
 
     const toggleDesktop = useCallback(
         () => setIsDesktopOpen((open) => !open),
