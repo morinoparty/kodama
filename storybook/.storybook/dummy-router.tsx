@@ -12,6 +12,7 @@ import {
     RouterProvider,
 } from "@tanstack/react-router";
 import { createContext, type ReactNode, useContext } from "react";
+import type { Breadcrumb } from "@/lib/breadcrumbs";
 
 const StoryContext = createContext<(() => ReactNode) | undefined>(undefined);
 const RenderStory = () => {
@@ -23,12 +24,21 @@ const RenderStory = () => {
 };
 
 // アプリで実在するパスを列挙する。ここに無いパスへの Link は解決できない
-const paths = ["/", "/auth/sign-in"];
+const paths = ["/", "/auth/sign-in"] as const;
+
+// パンくず (AppBreadcrumb) は route の staticData から組み立てるので、
+// story でもアプリと同じ形で段を持たせておく
+const BREADCRUMBS: Record<(typeof paths)[number], readonly Breadcrumb[]> = {
+    "/": [{ label: "ホーム" }],
+    "/auth/sign-in": [{ label: "サインイン" }],
+};
+
 const routes = paths.map((path) =>
     createRoute({
         path,
         getParentRoute: () => rootRoute,
         component: RenderStory,
+        staticData: { breadcrumbs: BREADCRUMBS[path] },
     }),
 );
 

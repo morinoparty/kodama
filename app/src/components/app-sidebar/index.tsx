@@ -1,9 +1,10 @@
-import { Button, Drawer, Portal } from "@morinoparty/chlorophyll-react";
+import { Drawer, Portal } from "@morinoparty/chlorophyll-react";
 import { Link, type LinkProps, useRouterState } from "@tanstack/react-router";
-import { ExternalLinkIcon, MenuIcon, SproutIcon } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import { ExternalLinkIcon, SproutIcon } from "lucide-react";
+import type { ReactNode } from "react";
 import { css } from "styled-system/css";
 import { LogoutButton } from "../logout-button";
+import { useSidebar } from "../sidebar-provider";
 import ThemeToggle from "../theme-toggle";
 
 // アプリ内のページへのリンク。to は Link と同じ型にしてあるので、
@@ -223,24 +224,6 @@ const asideStyle = css({
     borderColor: "border.subtle",
 });
 
-// モバイル用の上部バー (lg 未満)。画面幅を圧迫しないよう縦方向に積む
-const mobileBarStyle = css({
-    display: "flex",
-    lg: { display: "none" },
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: "3",
-    position: "sticky",
-    top: "0",
-    zIndex: "sticky",
-    px: "3",
-    py: "2",
-    bg: "bg.panel",
-    borderBlockEndWidth: "1px",
-    borderBlockEndStyle: "solid",
-    borderColor: "border.subtle",
-});
-
 // Drawer の既定幅 (maxWidth: sm) はサイドバーには広いので絞る
 const drawerContentStyle = css({ maxWidth: "72" });
 
@@ -379,59 +362,53 @@ function SidebarBody({
 
 /**
  * 運営ツールのサイドバー。
- * lg 以上では画面左に固定表示し、それ未満では上部バーの
- * ハンバーガーボタンから Drawer として開く。
+ * lg 以上では画面左に表示し、ヘッダーのボタンで折りたたむ。
+ * lg 未満ではヘッダーのボタンから Drawer として開く。
+ *
+ * 開閉ボタンはヘッダー (AppHeader) 側にあるため、状態は
+ * SidebarProvider の Context から受け取る。
  */
 export function AppSidebar() {
-    const [isOpen, setIsOpen] = useState(false);
+    const { isDesktopOpen, isMobileOpen, setMobileOpen, closeMobile } =
+        useSidebar();
 
     return (
         <>
-            {/* lg 未満: 上部バー + Drawer */}
-            <header className={mobileBarStyle}>
-                <Brand />
-                <Drawer.Root
-                    placement="start"
-                    open={isOpen}
-                    onOpenChange={(details) => setIsOpen(details.open)}
-                >
-                    {/* Drawer.Trigger を経由することで、閉じたときに
-                        フォーカスがこのボタンへ戻る */}
-                    <Drawer.Trigger asChild>
-                        <Button
-                            intent="plain"
-                            size="sm"
-                            aria-label="メニューを開く"
+            {/* lg 未満: Drawer。閉じたときのフォーカスは Ark UI が
+                開く前にフォーカスしていた要素 (ヘッダーのボタン) へ戻す */}
+            <Drawer.Root
+                placement="start"
+                open={isMobileOpen}
+                onOpenChange={(details) => setMobileOpen(details.open)}
+            >
+                <Portal>
+                    <Drawer.Backdrop />
+                    <Drawer.Positioner>
+                        <Drawer.Content
+                            className={drawerContentStyle}
+                            aria-label="サイドバー"
                         >
-                            <MenuIcon aria-hidden="true" />
-                        </Button>
-                    </Drawer.Trigger>
-                    <Portal>
-                        <Drawer.Backdrop />
-                        <Drawer.Positioner>
-                            <Drawer.Content
-                                className={drawerContentStyle}
-                                aria-label="サイドバー"
-                            >
-                                <SidebarBody
-                                    onNavigate={() => setIsOpen(false)}
-                                    closeSlot={
-                                        <Drawer.CloseTrigger
-                                            className={drawerCloseStyle}
-                                            aria-label="メニューを閉じる"
-                                        />
-                                    }
-                                />
-                            </Drawer.Content>
-                        </Drawer.Positioner>
-                    </Portal>
-                </Drawer.Root>
-            </header>
+                            <SidebarBody
+                                onNavigate={closeMobile}
+                                closeSlot={
+                                    <Drawer.CloseTrigger
+                                        className={drawerCloseStyle}
+                                        aria-label="メニューを閉じる"
+                                    />
+                                }
+                            />
+                        </Drawer.Content>
+                    </Drawer.Positioner>
+                </Portal>
+            </Drawer.Root>
 
-            {/* lg 以上: 常時表示のサイドバー */}
-            <aside className={asideStyle}>
-                <SidebarBody />
-            </aside>
+            {/* lg 以上: 常時表示のサイドバー。折りたたみ中は
+                キーボード操作の対象にも残らないよう要素ごと描画しない */}
+            {isDesktopOpen ? (
+                <aside className={asideStyle}>
+                    <SidebarBody />
+                </aside>
+            ) : null}
         </>
     );
 }
