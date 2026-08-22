@@ -3,7 +3,6 @@ import { MenuIcon, PanelLeftCloseIcon, PanelLeftOpenIcon } from "lucide-react";
 import { css } from "styled-system/css";
 import { AppBreadcrumb } from "../app-breadcrumb";
 import { useSidebar } from "../sidebar-provider";
-import ThemeToggle from "../theme-toggle";
 
 // ページ内容 (カードや表) がスクロール中にヘッダーの上へ出てこないよう
 // zIndex を持たせる。Drawer などの Portal はさらに上のレイヤーに描かれる
@@ -103,8 +102,6 @@ export function AppHeader() {
             <div className={breadcrumbAreaStyle}>
                 <AppBreadcrumb />
             </div>
-
-            <ThemeToggle />
         </header>
     );
 }
