@@ -1,6 +1,8 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { css } from "styled-system/css";
+import { AppHeader } from "../components/app-header";
 import { AppSidebar } from "../components/app-sidebar";
+import { SidebarProvider } from "../components/sidebar-provider";
 import { authMiddleware } from "../lib/auth-middleware";
 import { getSession } from "../lib/server-functions";
 
@@ -18,15 +20,21 @@ export const Route = createFileRoute("/_signed_in")({
     component: SignedInLayout,
 });
 
-// lg 未満ではサイドバーが上部バーになるため縦積み、
-// lg 以上ではサイドバー + メインの 2 カラムにする
+// サイドバー + メインの 2 カラム。
+// サイドバーは lg 未満では非表示になり、Drawer として開く
 const layoutStyle = css({
     display: "flex",
-    flexDirection: { base: "column", lg: "row" },
     minHeight: "100dvh",
 });
 
 // minWidth: 0 がないと、幅の広い表やコードブロックで横スクロールが発生する
+const contentStyle = css({
+    display: "flex",
+    flexDirection: "column",
+    flex: "1",
+    minWidth: "0",
+});
+
 const mainStyle = css({
     flex: "1",
     minWidth: "0",
@@ -34,11 +42,16 @@ const mainStyle = css({
 
 function SignedInLayout() {
     return (
-        <div className={layoutStyle}>
-            <AppSidebar />
-            <main className={mainStyle}>
-                <Outlet />
-            </main>
-        </div>
+        <SidebarProvider>
+            <div className={layoutStyle}>
+                <AppSidebar />
+                <div className={contentStyle}>
+                    <AppHeader />
+                    <main className={mainStyle}>
+                        <Outlet />
+                    </main>
+                </div>
+            </div>
+        </SidebarProvider>
     );
 }

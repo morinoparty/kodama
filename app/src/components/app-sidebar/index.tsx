@@ -1,10 +1,10 @@
-import { Button, Drawer, Portal } from "@morinoparty/chlorophyll-react";
+import { Drawer, Portal } from "@morinoparty/chlorophyll-react";
 import { Link, type LinkProps, useRouterState } from "@tanstack/react-router";
-import { ExternalLinkIcon, MenuIcon, SproutIcon } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import { ExternalLinkIcon, SproutIcon } from "lucide-react";
+import type { ReactNode } from "react";
 import { css } from "styled-system/css";
 import { LogoutButton } from "../logout-button";
-import ThemeToggle from "../theme-toggle";
+import { useSidebar } from "../sidebar-provider";
 
 // アプリ内のページへのリンク。to は Link と同じ型にしてあるので、
 // 存在しないパスを書くとその場で型エラーになる
@@ -74,11 +74,13 @@ const brandStyle = css({
     textDecoration: "none",
     color: "fg",
     _hover: { bg: "bg.muted" },
+    // outline: "none" だと outline-style が none のまま残り、
+    // ringWidth を足してもフォーカスリングが描かれない
     _focusVisible: {
-        outline: "none",
-        ringWidth: "2",
-        ringColor: "colorPalette.focus.ring",
-        ringOffset: "0",
+        outlineStyle: "solid",
+        outlineWidth: "2px",
+        outlineColor: "colorPalette.focus.ring",
+        outlineOffset: "2px",
     },
 });
 
@@ -160,11 +162,13 @@ const navLinkStyle = css({
         bg: "bg.muted",
         color: "fg",
     },
+    // outline: "none" だと outline-style が none のまま残り、
+    // ringWidth を足してもフォーカスリングが描かれない
     _focusVisible: {
-        outline: "none",
-        ringWidth: "2",
-        ringColor: "colorPalette.focus.ring",
-        ringOffset: "0",
+        outlineStyle: "solid",
+        outlineWidth: "2px",
+        outlineColor: "colorPalette.focus.ring",
+        outlineOffset: "2px",
     },
     "&[aria-current='page']": {
         bg: "colorPalette.bg.subtle",
@@ -220,24 +224,6 @@ const asideStyle = css({
     bg: "bg.panel",
     borderInlineEndWidth: "1px",
     borderInlineEndStyle: "solid",
-    borderColor: "border.subtle",
-});
-
-// モバイル用の上部バー (lg 未満)。画面幅を圧迫しないよう縦方向に積む
-const mobileBarStyle = css({
-    display: "flex",
-    lg: { display: "none" },
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: "3",
-    position: "sticky",
-    top: "0",
-    zIndex: "sticky",
-    px: "3",
-    py: "2",
-    bg: "bg.panel",
-    borderBlockEndWidth: "1px",
-    borderBlockEndStyle: "solid",
     borderColor: "border.subtle",
 });
 
@@ -358,7 +344,6 @@ function SidebarBody({
                     ))}
                 </ul>
                 <div className={footerActionsStyle}>
-                    <ThemeToggle />
                     <LogoutButton />
                 </div>
                 <p className={buildInfoStyle}>
@@ -379,59 +364,53 @@ function SidebarBody({
 
 /**
  * 運営ツールのサイドバー。
- * lg 以上では画面左に固定表示し、それ未満では上部バーの
- * ハンバーガーボタンから Drawer として開く。
+ * lg 以上では画面左に表示し、ヘッダーのボタンで折りたたむ。
+ * lg 未満ではヘッダーのボタンから Drawer として開く。
+ *
+ * 開閉ボタンはヘッダー (AppHeader) 側にあるため、状態は
+ * SidebarProvider の Context から受け取る。
  */
 export function AppSidebar() {
-    const [isOpen, setIsOpen] = useState(false);
+    const { isDesktopOpen, isMobileOpen, setMobileOpen, closeMobile } =
+        useSidebar();
 
     return (
         <>
-            {/* lg 未満: 上部バー + Drawer */}
-            <header className={mobileBarStyle}>
-                <Brand />
-                <Drawer.Root
-                    placement="start"
-                    open={isOpen}
-                    onOpenChange={(details) => setIsOpen(details.open)}
-                >
-                    {/* Drawer.Trigger を経由することで、閉じたときに
-                        フォーカスがこのボタンへ戻る */}
-                    <Drawer.Trigger asChild>
-                        <Button
-                            intent="plain"
-                            size="sm"
-                            aria-label="メニューを開く"
+            {/* lg 未満: Drawer。閉じたときのフォーカスは Ark UI が
+                開く前にフォーカスしていた要素 (ヘッダーのボタン) へ戻す */}
+            <Drawer.Root
+                placement="start"
+                open={isMobileOpen}
+                onOpenChange={(details) => setMobileOpen(details.open)}
+            >
+                <Portal>
+                    <Drawer.Backdrop />
+                    <Drawer.Positioner>
+                        <Drawer.Content
+                            className={drawerContentStyle}
+                            aria-label="サイドバー"
                         >
-                            <MenuIcon aria-hidden="true" />
-                        </Button>
-                    </Drawer.Trigger>
-                    <Portal>
-                        <Drawer.Backdrop />
-                        <Drawer.Positioner>
-                            <Drawer.Content
-                                className={drawerContentStyle}
-                                aria-label="サイドバー"
-                            >
-                                <SidebarBody
-                                    onNavigate={() => setIsOpen(false)}
-                                    closeSlot={
-                                        <Drawer.CloseTrigger
-                                            className={drawerCloseStyle}
-                                            aria-label="メニューを閉じる"
-                                        />
-                                    }
-                                />
-                            </Drawer.Content>
-                        </Drawer.Positioner>
-                    </Portal>
-                </Drawer.Root>
-            </header>
+                            <SidebarBody
+                                onNavigate={closeMobile}
+                                closeSlot={
+                                    <Drawer.CloseTrigger
+                                        className={drawerCloseStyle}
+                                        aria-label="メニューを閉じる"
+                                    />
+                                }
+                            />
+                        </Drawer.Content>
+                    </Drawer.Positioner>
+                </Portal>
+            </Drawer.Root>
 
-            {/* lg 以上: 常時表示のサイドバー */}
-            <aside className={asideStyle}>
-                <SidebarBody />
-            </aside>
+            {/* lg 以上: 常時表示のサイドバー。折りたたみ中は
+                キーボード操作の対象にも残らないよう要素ごと描画しない */}
+            {isDesktopOpen ? (
+                <aside className={asideStyle}>
+                    <SidebarBody />
+                </aside>
+            ) : null}
         </>
     );
 }

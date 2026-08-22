@@ -7,6 +7,11 @@ export const Route = createFileRoute("/_signed_in/")({
     component: HomePage,
     // ユーザー情報の取得に失敗しても、画面全体が落ちないようここで受け止める
     errorComponent: UserInfoErrorPage,
+    // パンくずの段。階層は一致した route の並びから自動で決まるので、
+    // ここでは自分の段だけを名乗る (lib/breadcrumbs.ts を参照)
+    staticData: {
+        breadcrumbs: [{ label: "ホーム" }],
+    },
 });
 
 const pageStyle = css({

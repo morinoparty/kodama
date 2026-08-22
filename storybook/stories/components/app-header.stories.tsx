@@ -5,8 +5,8 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarProvider } from "@/components/sidebar-provider";
 
 // _signed_in.tsx と同じ構成を再現する。
-// サイドバーは高さいっぱいに広がるので、外枠にも高さを持たせる。
-// 開閉ボタンはヘッダー側にあるため、ヘッダーも一緒に並べる
+// ヘッダーの開閉ボタンはサイドバーの状態を切り替えるため、
+// story でもサイドバーごと並べないと動きが確認できない
 const layoutStyle = css({
     colorPalette: "mori",
     display: "flex",
@@ -33,11 +33,11 @@ const mainStyle = css({
 const withSignedInLayout: Decorator = (Story) => (
     <SidebarProvider>
         <div className={layoutStyle}>
-            <Story />
+            <AppSidebar />
             <div className={contentStyle}>
-                <AppHeader />
+                <Story />
                 <main className={mainStyle}>
-                    ここにページの内容が入る。サイドバーの見え方を確認するためのダミー領域。
+                    ここにページの内容が入る。ヘッダーの見え方を確認するためのダミー領域。
                 </main>
             </div>
         </div>
@@ -45,17 +45,16 @@ const withSignedInLayout: Decorator = (Story) => (
 );
 
 const meta = {
-    title: "Components/AppSidebar",
-    component: AppSidebar,
+    title: "Components/AppHeader",
+    component: AppHeader,
     parameters: {
         layout: "fullscreen",
         docs: {
             description: {
                 component: [
-                    "運営ツールのサイドバー。lg 以上では画面左に表示し、",
-                    "ヘッダーのボタンで折りたたむ。lg 未満ではヘッダーのボタンから Drawer として開く。",
-                    "内部のログアウトボタンは TanStack Start のサーバー関数を呼ぶため",
-                    "Storybook では実行できない。描画とレイアウトの確認のみに使う。",
+                    "ログイン後の画面の上部ヘッダー。サイドバーの開閉ボタンとパンくずリストを並べる。",
+                    "開閉ボタンは lg 未満では Drawer を開き、lg 以上ではサイドバーを折りたたむ。",
+                    "パンくずは現在のルートの staticData から自動で組み立てられる。",
                 ].join(""),
             },
         },
@@ -77,29 +76,22 @@ const meta = {
         },
     },
     decorators: [withSignedInLayout],
-} satisfies Meta<typeof AppSidebar>;
+} satisfies Meta<typeof AppHeader>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** lg 以上。サイドバーが左に表示され、ヘッダーのボタンで折りたためる */
+/** lg 以上。ボタンを押すと左のサイドバーが折りたたまれる */
 export const Default: Story = {
     globals: {
         viewport: { value: "desktop", isRotated: false },
     },
 };
 
-/** lg 未満。ヘッダーのハンバーガーボタンから Drawer を開ける */
+/** lg 未満。ボタンを押すとサイドバーが Drawer として開く */
 export const Mobile: Story = {
     globals: {
         viewport: { value: "mobile", isRotated: false },
-    },
-    parameters: {
-        docs: {
-            description: {
-                story: "ハンバーガーボタンを押すと Drawer が開く。Drawer の開閉はクライアント側だけで完結するため Storybook でも動作する。",
-            },
-        },
     },
 };
