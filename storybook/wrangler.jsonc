@@ -1,0 +1,26 @@
+/**
+ * Storybook をビルド済みの静的アセットとして配信するための Worker。
+ * アプリ本体 (app/wrangler.jsonc) とは別の Worker として動く。
+ */
+{
+    "$schema": "node_modules/wrangler/config-schema.json",
+    "name": "kodama-storybook",
+    "compatibility_date": "2025-09-02",
+    "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+    "assets": {
+        "directory": "./storybook-static",
+        "not_found_handling": "single-page-application"
+    },
+    "observability": {
+        "enabled": false
+    },
+    // PR ごとの preview は app と同じく `wrangler versions upload` で行う
+    "preview_urls": true,
+    // 本番の公開ドメイン。Cloudflare 側に custom domain として登録される
+    "routes": [
+        {
+            "pattern": "story.kodama.moripa.nikomaru.dev",
+            "custom_domain": true
+        }
+    ]
+}

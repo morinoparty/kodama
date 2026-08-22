@@ -8,6 +8,8 @@ on:
 
 permissions:
   contents: read
+  # @morinoparty/chlorophyll-react を GitHub Packages から取得するために必要
+  packages: read
 
 concurrency:
   group: deploy
@@ -32,11 +34,30 @@ jobs:
           cache: pnpm
           cache-dependency-path: ./pnpm-lock.yaml
 
+      # private パッケージ (@morinoparty/chlorophyll-react) 取得用の GitHub Packages 認証。
+      # レジストリ指定はリポジトリの .npmrc にあるので、トークン行だけを足す
+      - name: Setup npm auth for GitHub Packages
+        run: echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> .npmrc
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Install
         run: pnpm install --frozen-lockfile
 
+      # styled-system は生成物なのでリポジトリに含めていない。
+      # install 時の prepare でも生成されるが、確実に揃えるため明示的に実行する
+      - name: Panda codegen
+        run: pnpm run panda:codegen
+
+      # サイドバーのフッターに出すデプロイ時刻。ビルド時に埋め込まれる
+      - name: Set deployment metadata
+        run: echo "VITE_DEPLOYED_AT=$(date -u +%Y-%m-%dT%H:%M:%S.000Z)" >> "$GITHUB_ENV"
+
+      # app (vite build) と storybook (storybook build) をまとめてビルドする。
+      # storybook worker は storybook-static を静的アセットとして配信するため、
+      # デプロイ前にここでビルドしておく必要がある
       - name: Build
-        run: pnpm run build
+        run: pnpm run build:all
 
       # AUTH_SECRET は Cloudflare Secrets Store バインディング (BSM: shared/AUTH_SECRET) から
       # Worker 実行時に供給されるため、ここでの取得・wrangler secret put は不要。
@@ -49,14 +70,26 @@ jobs:
           secrets: |
             d1a5c5d9-41cc-48f0-9035-b49901583491 > CLOUDFLARE_API_TOKEN
 
-      # sm-action は env にしか出さないため、wrangler-action の with: から参照できるよう output 化
+      # sm-action は env にしか出さないため、wrangler-action の with: から参照できるよう output 化。
+      # トークンの取得は 1 回だけ行い、app と storybook の両方のデプロイで使い回す
       - name: Expose deploy token as step output
         id: bws-deploy
         run: echo "cloudflare_api_token=$CLOUDFLARE_API_TOKEN" >> "$GITHUB_OUTPUT"
 
-      - name: Deploy
+      # 本番アプリ (worker: kodama / kodama.moripa.nikomaru.dev)
+      - name: Deploy app
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ steps.bws-deploy.outputs.cloudflare_api_token }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          workingDirectory: app
+          command: deploy
+
+      # Storybook (worker: kodama-storybook / story.kodama.moripa.nikomaru.dev)
+      - name: Deploy storybook
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ steps.bws-deploy.outputs.cloudflare_api_token }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          workingDirectory: storybook
           command: deploy

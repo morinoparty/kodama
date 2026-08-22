@@ -1,0 +1,59 @@
+/**
+ * For more details on how to configure Wrangler, refer to:
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+    "$schema": "node_modules/wrangler/config-schema.json",
+    "name": "kodama",
+    "compatibility_date": "2025-09-02",
+    "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+    "main": "@tanstack/react-start/server-entry",
+    "observability": {
+        "enabled": true
+    },
+    "upload_source_maps": true,
+    // 本番の公開ドメイン。Cloudflare 側に custom domain として登録される
+    "routes": [
+        {
+            "pattern": "kodama.moripa.nikomaru.dev",
+            "custom_domain": true
+        }
+    ],
+    // PR ごとの preview は `wrangler versions upload` の未昇格バージョン + preview URL で行う
+    "preview_urls": true,
+    "vars": {
+        // kodama 用の MineAuth OIDC クライアント。
+        // リダイレクト URI は `<origin>/api/auth/callback/MineAuth`
+        // (本番: https://kodama.moripa.nikomaru.dev/api/auth/callback/MineAuth)
+        "CLIENT_ID": "01a018fc-3495-755e-9782-eadc5a6038e6",
+        // MineAuth (OIDC プロバイダー) のベース URL
+        "MAIN_SERVER_URL": "https://api.morino.party/main",
+        // 各 Minecraft サーバーの API ベース URL
+        "SERVER_URL": "https://api.morino.party/",
+        // 管理対象サーバーの一覧
+        "SERVERS": "main,res,lobby"
+    },
+    // AUTH_SECRET は Cloudflare Secrets Store (BSM: shared/AUTH_SECRET) から供給する。
+    "secrets_store_secrets": [
+        {
+            "binding": "AUTH_SECRET",
+            "store_id": "d36d5a11ea07462c83bb21a0e9ccb811",
+            "secret_name": "shared_AUTH_SECRET"
+        }
+    ]
+    /**
+     * Smart Placement
+     * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
+     */
+    // "placement": {  "mode": "smart" }
+    /**
+     * Static Assets
+     * https://developers.cloudflare.com/workers/static-assets/binding/
+     */
+    // "assets": {  "directory": "./public/",  "binding": "ASSETS" }
+    /**
+     * Service Bindings (communicate between multiple Workers)
+     * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
+     */
+    // "services": [  {   "binding": "MY_SERVICE",   "service": "my-service"  } ]
+}

@@ -2,7 +2,7 @@
     "projectName": "kodama",
     "mode": "file-router",
     "typescript": true,
-    "tailwind": true,
+    "tailwind": false,
     "packageManager": "pnpm",
     "git": false,
     "install": false,

@@ -14,7 +14,9 @@
             "!**/dist",
             "!**/.wrangler",
             "!**/.tanstack",
-            "!worker-configuration.d.ts",
+            "!**/styled-system",
+            "!**/storybook-static",
+            "!**/worker-configuration.d.ts",
             "!**/src/routeTree.gen.ts"
         ]
     },
