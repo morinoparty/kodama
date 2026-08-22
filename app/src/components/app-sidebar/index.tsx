@@ -5,7 +5,6 @@ import type { ReactNode } from "react";
 import { css } from "styled-system/css";
 import { LogoutButton } from "../logout-button";
 import { useSidebar } from "../sidebar-provider";
-import ThemeToggle from "../theme-toggle";
 
 // アプリ内のページへのリンク。to は Link と同じ型にしてあるので、
 // 存在しないパスを書くとその場で型エラーになる
@@ -341,7 +340,6 @@ function SidebarBody({
                     ))}
                 </ul>
                 <div className={footerActionsStyle}>
-                    <ThemeToggle />
                     <LogoutButton />
                 </div>
                 <p className={buildInfoStyle}>

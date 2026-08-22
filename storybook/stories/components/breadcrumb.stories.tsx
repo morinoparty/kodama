@@ -1,5 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { css } from "styled-system/css";
 import { Breadcrumb } from "@/components/breadcrumb";
+
+// 折り返しを確認するため、あえて幅を絞る枠
+const narrowStyle = css({ maxWidth: "72" });
 
 const meta = {
     title: "Components/Breadcrumb",
@@ -58,7 +62,7 @@ export const Nested: Story = {
 /** 幅が足りないときは折り返す。ヘッダーでは横スクロールで吸収する */
 export const Wrapped: Story = {
     render: () => (
-        <div style={{ maxWidth: "18rem" }}>
+        <div className={narrowStyle}>
             <Breadcrumb.Root>
                 <Breadcrumb.List>
                     <Breadcrumb.Item>
