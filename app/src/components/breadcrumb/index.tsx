@@ -45,6 +45,12 @@ const linkStyle = css({
     },
 });
 
+// 押せない段なので、リンクと違って hover の反応は付けない
+const textStyle = css({
+    color: "fg.muted",
+    truncate: true,
+});
+
 const pageStyle = css({
     color: "fg",
     fontWeight: "medium",
@@ -104,7 +110,7 @@ const Page = ({ className, ...props }: ComponentProps<"span">) => (
  * サイドバーの区分名のように、画面を持たない階層を表すときに使う
  */
 const Text = ({ className, ...props }: ComponentProps<"span">) => (
-    <span className={cx(linkStyle, className)} {...props} />
+    <span className={cx(textStyle, className)} {...props} />
 );
 
 /**
