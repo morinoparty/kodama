@@ -22,8 +22,9 @@ export const getRailways = createServerFn().handler(async () => {
     );
 
     if (!response.ok) {
+        const errorText = await response.text().catch(() => "");
         throw new Error(
-            `AdvanceRailway の路線一覧の取得に失敗しました (${response.status})`,
+            `AdvanceRailway の路線一覧の取得に失敗しました (${response.status}${errorText ? `: ${errorText}` : ""})`,
         );
     }
 

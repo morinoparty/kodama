@@ -1,4 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import {
+    createFileRoute,
+    type ErrorComponentProps,
+} from "@tanstack/react-router";
 import { css } from "styled-system/css";
 import { GroupsTable } from "./-components/groups-table";
 import { getGroups } from "./-functions/get-groups";
@@ -74,7 +77,7 @@ function RailwayGroupPage() {
     );
 }
 
-function RailwayGroupErrorPage() {
+function RailwayGroupErrorPage({ error }: ErrorComponentProps) {
     return (
         <div className={pageStyle}>
             <div className={headerStyle}>
@@ -85,8 +88,24 @@ function RailwayGroupErrorPage() {
             </div>
             <section className={cardStyle}>
                 <p className={errorTextStyle}>
-                    グループ情報の取得に失敗しました。時間をおいて再読み込みしてください。
+                    グループ情報の取得に失敗しました。
                 </p>
+                {error?.message ? (
+                    <p
+                        className={css({
+                            textStyle: "xs",
+                            color: "fg.subtle",
+                            fontFamily: "mono",
+                            bg: "bg.muted",
+                            p: "3",
+                            borderRadius: "md",
+                            whiteSpace: "pre-wrap",
+                            wordBreak: "break-all",
+                        })}
+                    >
+                        {error.message}
+                    </p>
+                ) : null}
             </section>
         </div>
     );

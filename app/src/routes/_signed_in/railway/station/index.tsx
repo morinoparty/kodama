@@ -1,4 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import {
+    createFileRoute,
+    type ErrorComponentProps,
+} from "@tanstack/react-router";
 import { css } from "styled-system/css";
 import { StationsTable } from "./-components/stations-table";
 import { getStations } from "./-functions/get-stations";
@@ -74,7 +77,7 @@ function StationPage() {
     );
 }
 
-function StationErrorPage() {
+function StationErrorPage({ error }: ErrorComponentProps) {
     return (
         <div className={pageStyle}>
             <div className={headerStyle}>
@@ -84,9 +87,23 @@ function StationErrorPage() {
                 </p>
             </div>
             <section className={cardStyle}>
-                <p className={errorTextStyle}>
-                    駅情報の取得に失敗しました。時間をおいて再読み込みしてください。
-                </p>
+                <p className={errorTextStyle}>駅情報の取得に失敗しました。</p>
+                {error?.message ? (
+                    <p
+                        className={css({
+                            textStyle: "xs",
+                            color: "fg.subtle",
+                            fontFamily: "mono",
+                            bg: "bg.muted",
+                            p: "3",
+                            borderRadius: "md",
+                            whiteSpace: "pre-wrap",
+                            wordBreak: "break-all",
+                        })}
+                    >
+                        {error.message}
+                    </p>
+                ) : null}
             </section>
         </div>
     );

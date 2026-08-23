@@ -22,8 +22,9 @@ export const getStations = createServerFn().handler(async () => {
     );
 
     if (!response.ok) {
+        const errorText = await response.text().catch(() => "");
         throw new Error(
-            `AdvanceRailway の駅一覧の取得に失敗しました (${response.status})`,
+            `AdvanceRailway の駅一覧の取得に失敗しました (${response.status}${errorText ? `: ${errorText}` : ""})`,
         );
     }
 

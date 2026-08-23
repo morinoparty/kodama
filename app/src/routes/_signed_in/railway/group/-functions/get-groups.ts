@@ -22,8 +22,9 @@ export const getGroups = createServerFn().handler(async () => {
     );
 
     if (!response.ok) {
+        const errorText = await response.text().catch(() => "");
         throw new Error(
-            `AdvanceRailway のグループ一覧の取得に失敗しました (${response.status})`,
+            `AdvanceRailway のグループ一覧の取得に失敗しました (${response.status}${errorText ? `: ${errorText}` : ""})`,
         );
     }
 
