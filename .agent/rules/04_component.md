@@ -18,8 +18,10 @@ import { Button } from "@morinoparty/chlorophyll-react";
 import { Collapsible } from "@ark-ui/react/collapsible";
 ```
 
-3. アイコンは `lucide-react` を使います。
-4. shadcn/ui は使いません。
+3. Chlorophyll に無いコンポーネントが、このプロジェクト固有ではなく他のプロジェクトでも
+   共通して利用すべきものだと判断した場合は、Chlorophyll のリポジトリに Issue を作成します。
+4. アイコンは `lucide-react` を使います。
+5. shadcn/ui は使いません。
 
 ## 命名規則
 
