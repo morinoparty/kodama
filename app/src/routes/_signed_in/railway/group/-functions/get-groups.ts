@@ -1,23 +1,18 @@
 import { env } from "cloudflare:workers";
 import { createServerFn } from "@tanstack/react-start";
-import { getRequest } from "@tanstack/react-start/server";
-import { getAuth } from "@/lib/auth";
+import { getApiToken } from "@/lib/server-functions";
 import type { RailwayGroupsResponse } from "../-types";
 
 /**
  * AdvanceRailway のグループ一覧を取得するサーバー関数
  */
 export const getGroups = createServerFn().handler(async () => {
-    const auth = await getAuth();
-    const tokenResult = await auth.api.getAccessToken({
-        body: { useAccountCookie: true },
-        headers: getRequest().headers,
-    });
+    const token = await getApiToken();
 
     const response = await fetch(
         `${env.MAIN_SERVER_URL}/api/v1/plugins/advancerailway/groups`,
         {
-            headers: { Authorization: `Bearer ${tokenResult.accessToken}` },
+            headers: { Authorization: `Bearer ${token}` },
         },
     );
 
