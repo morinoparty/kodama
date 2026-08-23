@@ -32,6 +32,14 @@ const NAV_GROUPS = [
         title: "ホーム",
         items: [{ title: "ホーム", to: "/" }],
     },
+    {
+        title: "鉄道",
+        items: [
+            { title: "グループ", to: "/railway/group" },
+            { title: "路線", to: "/railway/railway" },
+            { title: "駅", to: "/railway/station" },
+        ],
+    },
 ] as const satisfies readonly NavGroup[];
 
 // フッターに置く参考リンク。運営メンバーがすぐ辿れるようにしておく
