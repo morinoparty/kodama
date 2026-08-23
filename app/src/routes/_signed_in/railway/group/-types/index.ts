@@ -1,5 +1,5 @@
 /**
- * AdvanceRailway の鉄道グループ情報
+ * AdvanceRailway の鉄道グループ (路線をまとめる単位)
  */
 export interface RailwayGroup {
     readonly id: string;
@@ -8,8 +8,8 @@ export interface RailwayGroup {
 }
 
 /**
- * グループ一覧 API のレスポンス
+ * グループ一覧 API (`GET /api/v1/plugins/advancerailway/groups`) のレスポンス
  */
 export interface RailwayGroupsResponse {
-    readonly groups: readonly RailwayGroup[];
+    readonly groups: RailwayGroup[];
 }
