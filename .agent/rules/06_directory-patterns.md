@@ -63,7 +63,7 @@ kodama/
 - `storybook/package.json` — `@kodama/storybook`
 - `storybook/stories/` — story ファイル (`*.stories.tsx`)。app のコンポーネントは `@/` で参照する
 - `storybook/.storybook/main.ts` — Storybook の設定。ブラウザで解決できないモジュールの alias もここ
-- `storybook/.storybook/preview.tsx` — カラーモード切り替えなど、全 story 共通のデコレーター
+- `storybook/.storybook/preview.tsx` — ブランドパレットの適用など、全 story 共通のデコレーター
 - `storybook/.storybook/dummy-router.tsx` — TanStack Router に依存する UI を story で描くためのダミー
 - `storybook/.storybook/shims/` — TanStack Start / Workers ランタイム向けのスタブ
 - `storybook/panda.config.ts` — app の設定を流用し、抽出対象と出力先だけ差し替える

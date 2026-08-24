@@ -21,7 +21,6 @@ import { flex } from "styled-system/patterns";
 ## デザイントークン
 
 生の色値 (`#0f172a` や `rgba(...)`) は書かず、Chlorophyll preset のセマンティックトークンを使ってください。
-light / dark の切り替えはトークン側が持っています。
 
 - 背景: `bg` / `bg.subtle` / `bg.muted` / `bg.panel` / `bg.emphasized` / `bg.inverted` / `bg.disabled`
 - 文字: `fg` / `fg.muted` / `fg.subtle` / `fg.disabled`
@@ -47,16 +46,15 @@ css({ flexDirection: { base: "column", md: "row" }, p: { base: "3", lg: "6" } })
 - 横スクロールが発生しないようにしてください。表やコードブロックは個別に
   `overflowX: "auto"` のコンテナに入れてください。
 
-## ダークモード
+## カラーモード
 
-- テーマは `html` 要素の `light` / `dark` クラスで切り替わります (`app/src/components/theme-toggle`)。
-- セマンティックトークンは light / dark を自動で切り替えるので、通常はトークンを使うだけで十分です。
-- トークンでは表現できない配色差だけ、条件 `_dark` (セレクタは `.dark &`) で上書きしてください。
-  片方のテーマでしか成立しない配色にしないでください。
+このプロジェクトは **light のみ**で作ります。ダークモードには対応しません。
 
-```tsx
-css({ boxShadow: "sm", _dark: { boxShadow: "none" } })
-```
+- `_dark` 条件や `.dark` / `[data-theme="dark"]` セレクタは書かないでください。
+- Chlorophyll preset のセマンティックトークンは light 側の値だけを持っており、
+  ビルドされる CSS にダークモード用の宣言は 1 つも出ません。`_dark` を書いても無視されます。
+- したがって「light では読めるが dark では読めない」といった配慮は不要です。
+  トークンをそのまま使ってください。
 
 ## 文言
 
