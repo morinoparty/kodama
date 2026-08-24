@@ -5,7 +5,7 @@ import type {
     RailwayItem,
     RailwaysResponse,
     StationItem,
-    StationsResponse,
+    StationNumbering,
 } from "../-types";
 
 // AdvanceRailway プラグイン API の呼び出し。
@@ -27,17 +27,19 @@ const PAGE_SIZE = 500;
 async function fetchAllPages<TResponse, TItem>(
     path: string,
     resourceLabel: string,
-    pick: (response: TResponse) => TItem[],
+    pick: (response: TResponse) => TItem[] | undefined,
 ): Promise<TItem[]> {
     const items: TItem[] = [];
 
     for (let offset = 0; ; offset += PAGE_SIZE) {
-        const page = pick(
-            await fetchPluginApi<TResponse>(
-                `${path}?limit=${PAGE_SIZE}&offset=${offset}`,
-                `${resourceLabel}の取得`,
-            ),
-        );
+        // 配列が丸ごと欠けていても落ちないようにしておく
+        const page =
+            pick(
+                await fetchPluginApi<TResponse>(
+                    `${path}?limit=${PAGE_SIZE}&offset=${offset}`,
+                    `${resourceLabel}の取得`,
+                ),
+            ) ?? [];
         items.push(...page);
 
         // 満たないページが来たらそこが最後
@@ -61,12 +63,29 @@ export const fetchRailways = () =>
         (response) => response.railways,
     );
 
-export const fetchStations = () =>
-    fetchAllPages<StationsResponse, StationItem>(
+// numberings は Kotlin 側の DTO が `= emptyList()` の既定値を持つため、
+// どのグループにも属していない駅ではレスポンスから項目ごと省かれることがある。
+// OpenAPI は required と書いているが実際には来ないので、境界でここだけ整えておく
+type RawStation = Omit<StationItem, "numberings"> & {
+    numberings?: StationNumbering[];
+};
+
+interface RawStationsResponse {
+    readonly stations: RawStation[];
+}
+
+export const fetchStations = async (): Promise<StationItem[]> => {
+    const stations = await fetchAllPages<RawStationsResponse, RawStation>(
         `${BASE_PATH}/stations`,
         "駅一覧",
         (response) => response.stations,
     );
+
+    return stations.map((station) => ({
+        ...station,
+        numberings: station.numberings ?? [],
+    }));
+};
 
 /**
  * PATCH のリクエストボディ。
