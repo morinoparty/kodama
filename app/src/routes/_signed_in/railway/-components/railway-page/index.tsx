@@ -1,12 +1,12 @@
 import type { ReactNode } from "react";
 import { css } from "styled-system/css";
 
+// 一覧はどれも列が多いので、幅の上限は設けずに画面いっぱいまで使う。
+// 読み物の画面 (ホームなど) とは違い、1 行を折り返さずに見せたい
 const pageStyle = css({
     display: "flex",
     flexDirection: "column",
     gap: "6",
-    maxWidth: "7xl",
-    mx: "auto",
     px: { base: "4", sm: "6" },
     py: { base: "8", sm: "12" },
 });
