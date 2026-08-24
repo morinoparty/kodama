@@ -5,25 +5,29 @@ import { getAuth } from "./auth";
 /**
  * MineAuth のプラグイン API を叩くための Bearer トークンを取得する。
  *
- * プラグイン API は署名付きの JWT を要求するため idToken を優先し、
- * 発行されていない場合だけ accessToken にフォールバックする。
- * access token が失効していても getAccessToken が refresh token で自動更新する。
+ * 必ず access token を使う。MineAuth は受け取った JWT の `token_type` クレームが
+ * `"token"` であることを確認しており、これを持つのは access token だけなので、
+ * id_token を送ると `Token is not valid or has expired` で 401 になる。
+ * さらに MineAuth は refresh_token グラントで id_token を再発行しない
+ * (OIDC の一般的な作法) ため、ログイン時の id_token は更新されず失効する。
+ *
+ * access token が失効していても getAccessToken が refresh token で自動更新し、
+ * ローテーション後の refresh token も account クッキーへ書き戻される。
  */
 async function getPluginApiToken(): Promise<string> {
     const auth = await getAuth();
-    const tokenResult = await auth.api.getAccessToken({
+    const { accessToken } = await auth.api.getAccessToken({
         body: { useAccountCookie: true },
         headers: getRequest().headers,
     });
 
-    const token = tokenResult.idToken ?? tokenResult.accessToken;
-    if (!token) {
+    if (!accessToken) {
         throw new Error(
-            "認証トークンが見つかりません。再ログインしてください。",
+            "アクセストークンが見つかりません。再ログインしてください。",
         );
     }
 
-    return token;
+    return accessToken;
 }
 
 /**
