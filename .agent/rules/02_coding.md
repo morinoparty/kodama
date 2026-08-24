@@ -22,6 +22,14 @@
 - ルートは `app/src/routes/` のファイルベースルーティングで定義します。ルートファイルを追加・削除したら
   `pnpm run generate-routes` で `app/src/routeTree.gen.ts` を再生成してください
   （`pnpm run dev` 中は自動生成されます）。
+- `app/tsr.config.json` の `routeTreeFileFooter` は、`routeTree.gen.ts` の末尾に付く
+  `declare module '@tanstack/react-start'`（`Register` の型登録）です。
+  ビルド時は TanStack Start の vite プラグインがこのブロックを生成しますが、
+  standalone の `tsr generate` は Start を知らないため、ここに書いておかないと
+  再生成のたびにブロックが消えてしまいます。
+  なお vite プラグイン側はこの設定値を無視するので、両方から生成しても重複しません。
+  TanStack Start を上げたときは、`pnpm run build` と `pnpm run generate-routes` の
+  出力が一致するか確認してください。
 - サーバー側でしか動かせない処理は `createServerFn()` で書き、クライアントからはただの関数として呼びます。
 - サーバー関数のコンテキストには `request` が含まれません。リクエストのヘッダーなどが必要な場合は
   `@tanstack/react-start/server` の `getRequest()` を使ってください。
