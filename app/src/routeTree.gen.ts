@@ -13,6 +13,9 @@ import { Route as Signed_inRouteImport } from './routes/_signed_in'
 import { Route as Signed_inIndexRouteImport } from './routes/_signed_in/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AuthSignInIndexRouteImport } from './routes/auth/sign-in/index'
+import { Route as Signed_inRailwayGroupIndexRouteImport } from './routes/_signed_in/railway/group/index'
+import { Route as Signed_inRailwayRailwayIndexRouteImport } from './routes/_signed_in/railway/railway/index'
+import { Route as Signed_inRailwayStationIndexRouteImport } from './routes/_signed_in/railway/station/index'
 
 const Signed_inRoute = Signed_inRouteImport.update({
   id: '/_signed_in',
@@ -33,16 +36,40 @@ const AuthSignInIndexRoute = AuthSignInIndexRouteImport.update({
   path: '/auth/sign-in/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Signed_inRailwayGroupIndexRoute =
+  Signed_inRailwayGroupIndexRouteImport.update({
+    id: '/railway/group/',
+    path: '/railway/group/',
+    getParentRoute: () => Signed_inRoute,
+  } as any)
+const Signed_inRailwayRailwayIndexRoute =
+  Signed_inRailwayRailwayIndexRouteImport.update({
+    id: '/railway/railway/',
+    path: '/railway/railway/',
+    getParentRoute: () => Signed_inRoute,
+  } as any)
+const Signed_inRailwayStationIndexRoute =
+  Signed_inRailwayStationIndexRouteImport.update({
+    id: '/railway/station/',
+    path: '/railway/station/',
+    getParentRoute: () => Signed_inRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof Signed_inIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/auth/sign-in/': typeof AuthSignInIndexRoute
+  '/railway/group/': typeof Signed_inRailwayGroupIndexRoute
+  '/railway/railway/': typeof Signed_inRailwayRailwayIndexRoute
+  '/railway/station/': typeof Signed_inRailwayStationIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof Signed_inIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/auth/sign-in': typeof AuthSignInIndexRoute
+  '/railway/group': typeof Signed_inRailwayGroupIndexRoute
+  '/railway/railway': typeof Signed_inRailwayRailwayIndexRoute
+  '/railway/station': typeof Signed_inRailwayStationIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -50,18 +77,36 @@ export interface FileRoutesById {
   '/_signed_in/': typeof Signed_inIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/auth/sign-in/': typeof AuthSignInIndexRoute
+  '/_signed_in/railway/group/': typeof Signed_inRailwayGroupIndexRoute
+  '/_signed_in/railway/railway/': typeof Signed_inRailwayRailwayIndexRoute
+  '/_signed_in/railway/station/': typeof Signed_inRailwayStationIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/auth/$' | '/auth/sign-in/'
+  fullPaths:
+    | '/'
+    | '/api/auth/$'
+    | '/auth/sign-in/'
+    | '/railway/group/'
+    | '/railway/railway/'
+    | '/railway/station/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/auth/$' | '/auth/sign-in'
+  to:
+    | '/'
+    | '/api/auth/$'
+    | '/auth/sign-in'
+    | '/railway/group'
+    | '/railway/railway'
+    | '/railway/station'
   id:
     | '__root__'
     | '/_signed_in'
     | '/_signed_in/'
     | '/api/auth/$'
     | '/auth/sign-in/'
+    | '/_signed_in/railway/group/'
+    | '/_signed_in/railway/railway/'
+    | '/_signed_in/railway/station/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -100,15 +145,42 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSignInIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_signed_in/railway/group/': {
+      id: '/_signed_in/railway/group/'
+      path: '/railway/group'
+      fullPath: '/railway/group/'
+      preLoaderRoute: typeof Signed_inRailwayGroupIndexRouteImport
+      parentRoute: typeof Signed_inRoute
+    }
+    '/_signed_in/railway/railway/': {
+      id: '/_signed_in/railway/railway/'
+      path: '/railway/railway'
+      fullPath: '/railway/railway/'
+      preLoaderRoute: typeof Signed_inRailwayRailwayIndexRouteImport
+      parentRoute: typeof Signed_inRoute
+    }
+    '/_signed_in/railway/station/': {
+      id: '/_signed_in/railway/station/'
+      path: '/railway/station'
+      fullPath: '/railway/station/'
+      preLoaderRoute: typeof Signed_inRailwayStationIndexRouteImport
+      parentRoute: typeof Signed_inRoute
+    }
   }
 }
 
 interface Signed_inRouteChildren {
   Signed_inIndexRoute: typeof Signed_inIndexRoute
+  Signed_inRailwayGroupIndexRoute: typeof Signed_inRailwayGroupIndexRoute
+  Signed_inRailwayRailwayIndexRoute: typeof Signed_inRailwayRailwayIndexRoute
+  Signed_inRailwayStationIndexRoute: typeof Signed_inRailwayStationIndexRoute
 }
 
 const Signed_inRouteChildren: Signed_inRouteChildren = {
   Signed_inIndexRoute: Signed_inIndexRoute,
+  Signed_inRailwayGroupIndexRoute: Signed_inRailwayGroupIndexRoute,
+  Signed_inRailwayRailwayIndexRoute: Signed_inRailwayRailwayIndexRoute,
+  Signed_inRailwayStationIndexRoute: Signed_inRailwayStationIndexRoute,
 }
 
 const Signed_inRouteWithChildren = Signed_inRoute._addFileChildren(

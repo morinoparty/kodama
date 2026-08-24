@@ -14,6 +14,7 @@
         "@ark-ui/react": "^5.30.0",
         "@morinoparty/chlorophyll-react": "^0.4.4",
         "@tanstack/react-router": "latest",
+        "@tanstack/react-table": "^8.21.3",
         "lucide-react": "^0.562.0",
         "react": "^19.2.0",
         "react-dom": "^19.2.0"

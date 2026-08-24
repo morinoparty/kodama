@@ -23,6 +23,7 @@ export default defineConfig({
         recipes: {
             button: ["*"],
             drawer: ["*"],
+            toast: ["*"],
         },
     },
 
