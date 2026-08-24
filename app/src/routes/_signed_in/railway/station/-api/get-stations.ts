@@ -1,8 +1,15 @@
 import { createServerFn } from "@tanstack/react-start";
-import { fetchStations } from "../../-api/advance-railway";
+import { fetchStations, patchStationSlug } from "../../-api/advance-railway";
 
 /**
  * AdvanceRailway の駅一覧を取得する。
  * アクセストークンをクライアントに渡さないため、通信はサーバー側で行う。
  */
-export const getStations = createServerFn().handler(() => fetchStations());
+export const getStations = createServerFn().handler(async () => ({
+    stations: await fetchStations(),
+}));
+
+/** 駅の slug を変更する */
+export const updateStationSlug = createServerFn({ method: "POST" })
+    .inputValidator((input: { id: string; slug: string }) => input)
+    .handler(({ data }) => patchStationSlug(data.id, data.slug));

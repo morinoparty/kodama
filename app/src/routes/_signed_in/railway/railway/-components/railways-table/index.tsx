@@ -1,12 +1,17 @@
 import { Badge } from "@morinoparty/chlorophyll-react";
+import { useRouter } from "@tanstack/react-router";
 import { createColumnHelper } from "@tanstack/react-table";
 import { ArrowRightIcon } from "lucide-react";
 import { useMemo } from "react";
 import { css } from "styled-system/css";
 import { DataTable } from "@/components/data-table";
 import { CodeChip } from "../../../-components/code-chip";
+import { EditableCell } from "../../../-components/editable-cell";
+import { GroupSelectCell } from "../../../-components/group-select-cell";
 import { formatDuration } from "../../../-functions/format-duration";
 import { formatPoint } from "../../../-functions/format-point";
+import type { RailwayGroup } from "../../../-types";
+import { updateRailwayGroup, updateRailwaySlug } from "../../-api/get-railways";
 import type { RailwayRow } from "../../-types";
 
 const sectionStyle = css({
@@ -23,17 +28,24 @@ const arrowIconStyle = css({
     flexShrink: "0",
 });
 
-const mutedTextStyle = css({ textStyle: "xs", color: "fg.subtle" });
-
 const worldStyle = css({ textStyle: "xs", color: "fg.muted" });
 
 const columnHelper = createColumnHelper<RailwayRow>();
 
+export interface RailwaysTableProps {
+    readonly data: RailwayRow[];
+    /** 所属グループを選び直すための選択肢 */
+    readonly groups: RailwayGroup[];
+}
+
 /**
  * AdvanceRailway の路線一覧テーブル。
- * 区間とグループは ID ではなく、loader で解決済みの名前を表示する。
+ * 区間とグループは ID ではなく loader で解決済みの名前を表示し、
+ * slug と所属グループは表の中でそのまま書き換えられる。
  */
-export function RailwaysTable({ data }: { data: RailwayRow[] }) {
+export function RailwaysTable({ data, groups }: RailwaysTableProps) {
+    const router = useRouter();
+
     const columns = useMemo(
         () => [
             columnHelper.accessor("lineType", {
@@ -59,18 +71,37 @@ export function RailwaysTable({ data }: { data: RailwayRow[] }) {
                     </span>
                 ),
             }),
+            columnHelper.accessor("slug", {
+                header: "slug",
+                cell: (info) => (
+                    <EditableCell
+                        value={info.getValue()}
+                        label="路線の slug"
+                        onSave={async (slug) => {
+                            // 更新は必ず UUID 宛てに送る。slug 自体が変わるため
+                            await updateRailwaySlug({
+                                data: { id: info.row.original.id, slug },
+                            });
+                            await router.invalidate();
+                        }}
+                    />
+                ),
+            }),
+            // 並べ替えの基準は表示名。書き換えは UUID で行う
             columnHelper.accessor("groupName", {
                 header: "グループ",
-                cell: (info) => {
-                    const groupName = info.getValue();
-                    return groupName ? (
-                        <Badge variant="outline" size="sm">
-                            {groupName}
-                        </Badge>
-                    ) : (
-                        <span className={mutedTextStyle}>なし</span>
-                    );
-                },
+                cell: (info) => (
+                    <GroupSelectCell
+                        value={info.row.original.group}
+                        groups={groups}
+                        onSave={async (groupId) => {
+                            await updateRailwayGroup({
+                                data: { id: info.row.original.id, groupId },
+                            });
+                            await router.invalidate();
+                        }}
+                    />
+                ),
             }),
             columnHelper.accessor("timeRequired", {
                 header: "所要時間",
@@ -97,12 +128,8 @@ export function RailwaysTable({ data }: { data: RailwayRow[] }) {
                     <CodeChip>{formatPoint(info.getValue())}</CodeChip>
                 ),
             }),
-            columnHelper.accessor("id", {
-                header: "ID",
-                cell: (info) => <CodeChip>{info.getValue()}</CodeChip>,
-            }),
         ],
-        [],
+        [groups, router],
     );
 
     return (

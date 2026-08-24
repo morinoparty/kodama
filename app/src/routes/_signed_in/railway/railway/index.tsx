@@ -22,11 +22,11 @@ const TITLE = "路線一覧";
 const DESCRIPTION = "AdvanceRailway に登録されている路線・運行区間の一覧です。";
 
 function RailwayListPage() {
-    const { railways } = Route.useLoaderData();
+    const { railways, groups } = Route.useLoaderData();
 
     return (
         <RailwayPage title={TITLE} description={DESCRIPTION}>
-            <RailwaysTable data={railways} />
+            <RailwaysTable data={railways} groups={groups} />
         </RailwayPage>
     );
 }

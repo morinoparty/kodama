@@ -1,15 +1,15 @@
 import type { RailwayGroup, RailwayItem, StationItem } from "../../-types";
 import type { RailwayRow } from "../-types";
 
-/** id -> name の対応表を作る */
+/** UUID -> name の対応表を作る */
 const nameById = (items: readonly { id: string; name: string }[]) =>
     new Map(items.map((item) => [item.id, item.name]));
 
 /**
  * 路線が ID で参照している駅・グループを名前へ解決する。
  *
- * 見つからなかった ID は名前の代わりにそのまま残す。データの不整合を
- * 空欄で隠すより、ID が見えていた方が原因を追える。
+ * 名前が引けなかったときは slug、それも無ければ ID をそのまま残す。
+ * データの不整合を空欄で隠すより、識別子が見えていた方が原因を追える。
  */
 export function toRailwayRows(
     railways: readonly RailwayItem[],
@@ -19,14 +19,27 @@ export function toRailwayRows(
     const stationNames = nameById(stations);
     const groupNames = nameById(groups);
 
+    const resolve = (
+        map: Map<string, string>,
+        id: string,
+        slug: string | null | undefined,
+    ) => map.get(id) ?? slug ?? id;
+
     return railways.map((railway) => ({
         ...railway,
-        fromStationName:
-            stationNames.get(railway.fromStation) ?? railway.fromStation,
-        toStationName: stationNames.get(railway.toStation) ?? railway.toStation,
+        fromStationName: resolve(
+            stationNames,
+            railway.fromStation,
+            railway.fromStationSlug,
+        ),
+        toStationName: resolve(
+            stationNames,
+            railway.toStation,
+            railway.toStationSlug,
+        ),
         groupName:
             railway.group === null
                 ? null
-                : (groupNames.get(railway.group) ?? railway.group),
+                : resolve(groupNames, railway.group, railway.groupSlug),
     }));
 }

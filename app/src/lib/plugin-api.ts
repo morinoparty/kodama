@@ -30,8 +30,15 @@ async function getPluginApiToken(): Promise<string> {
     return accessToken;
 }
 
+interface PluginApiOptions {
+    /** 既定は GET */
+    readonly method?: "GET" | "POST" | "PATCH" | "DELETE";
+    /** JSON として送るリクエストボディ */
+    readonly body?: unknown;
+}
+
 /**
- * メインサーバーのプラグイン API から JSON を取得する。
+ * メインサーバーのプラグイン API へリクエストして JSON を受け取る。
  *
  * トークンの取得・付与とレスポンスの検査をここに閉じ込め、
  * 各ルートのサーバー関数はパスと戻り値の型だけを与えれば済むようにしている。
@@ -45,21 +52,45 @@ async function getPluginApiToken(): Promise<string> {
 export async function fetchPluginApi<T>(
     path: string,
     resourceLabel: string,
+    options: PluginApiOptions = {},
 ): Promise<T> {
     const token = await getPluginApiToken();
+    const { method = "GET", body } = options;
 
     const response = await fetch(`${env.MAIN_SERVER_URL}${path}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        method,
+        headers: {
+            Authorization: `Bearer ${token}`,
+            ...(body === undefined
+                ? {}
+                : { "Content-Type": "application/json" }),
+        },
+        body: body === undefined ? undefined : JSON.stringify(body),
     });
 
     // 失敗レスポンスのボディをそのまま値として扱うと描画時に落ちて原因が
-    // 分かりにくくなる。ここで loader の失敗にして errorComponent に処理を渡す
+    // 分かりにくくなる。ここで loader / action の失敗にして呼び出し側へ渡す
     if (!response.ok) {
-        const detail = await response.text().catch(() => "");
         throw new Error(
-            `${resourceLabel}の取得に失敗しました (${response.status}${detail ? `: ${detail}` : ""})`,
+            `${resourceLabel}に失敗しました (${await describeFailure(response)})`,
         );
     }
 
     return (await response.json()) as T;
 }
+
+// AdvanceRailway の API は `advancerailway.admin` を持つプレイヤーの
+// ユーザートークンだけを通し、しかも権限判定はオンラインのプレイヤーに対して
+// 行われる。オフラインだと 403 `player_offline` になるので、
+// 何を直せばよいか分かる文言に置き換える
+const describeFailure = async (response: Response): Promise<string> => {
+    const detail = await response.text().catch(() => "");
+
+    if (response.status === 403 && detail.includes("player_offline")) {
+        return "403: Minecraft サーバーにログインしている間だけ操作できます";
+    }
+    if (response.status === 403) {
+        return `403: 権限が足りません (advancerailway.admin が必要です)${detail ? ` / ${detail}` : ""}`;
+    }
+    return `${response.status}${detail ? `: ${detail}` : ""}`;
+};
