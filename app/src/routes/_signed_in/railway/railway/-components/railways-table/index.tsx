@@ -7,7 +7,7 @@ import { DataTable } from "@/components/data-table";
 import { CodeChip } from "../../../-components/code-chip";
 import { formatDuration } from "../../../-functions/format-duration";
 import { formatPoint } from "../../../-functions/format-point";
-import type { RailwayItem } from "../../-types";
+import type { RailwayRow } from "../../-types";
 
 const sectionStyle = css({
     display: "inline-flex",
@@ -27,12 +27,13 @@ const mutedTextStyle = css({ textStyle: "xs", color: "fg.subtle" });
 
 const worldStyle = css({ textStyle: "xs", color: "fg.muted" });
 
-const columnHelper = createColumnHelper<RailwayItem>();
+const columnHelper = createColumnHelper<RailwayRow>();
 
 /**
- * AdvanceRailway の路線一覧テーブル
+ * AdvanceRailway の路線一覧テーブル。
+ * 区間とグループは ID ではなく、loader で解決済みの名前を表示する。
  */
-export function RailwaysTable({ data }: { data: RailwayItem[] }) {
+export function RailwaysTable({ data }: { data: RailwayRow[] }) {
     const columns = useMemo(
         () => [
             columnHelper.accessor("lineType", {
@@ -43,8 +44,8 @@ export function RailwaysTable({ data }: { data: RailwayItem[] }) {
                     </Badge>
                 ),
             }),
-            // 区間は 2 つの列にまたがる表示なので、並べ替えの基準には出発駅を使う
-            columnHelper.accessor("fromStation", {
+            // 区間は 2 つの駅にまたがる表示なので、並べ替えの基準には出発駅名を使う
+            columnHelper.accessor("fromStationName", {
                 id: "section",
                 header: "区間",
                 cell: (info) => (
@@ -54,17 +55,17 @@ export function RailwaysTable({ data }: { data: RailwayItem[] }) {
                             className={arrowIconStyle}
                             aria-label="から"
                         />
-                        <span>{info.row.original.toStation}</span>
+                        <span>{info.row.original.toStationName}</span>
                     </span>
                 ),
             }),
-            columnHelper.accessor("group", {
+            columnHelper.accessor("groupName", {
                 header: "グループ",
                 cell: (info) => {
-                    const group = info.getValue();
-                    return group ? (
+                    const groupName = info.getValue();
+                    return groupName ? (
                         <Badge variant="outline" size="sm">
-                            {group}
+                            {groupName}
                         </Badge>
                     ) : (
                         <span className={mutedTextStyle}>なし</span>

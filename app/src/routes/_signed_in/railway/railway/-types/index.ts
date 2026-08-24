@@ -1,25 +1,22 @@
-import type { Point3D } from "../../-types";
+import type { RailwayItem } from "../../-types";
 
 /**
- * AdvanceRailway の路線 (駅と駅を結ぶ 1 区間)
+ * 一覧表示用に、ID で参照されている駅とグループを名前へ解決した路線。
+ *
+ * 一覧に出したいのは名前だけなので、解決はサーバー側でまとめて済ませる。
+ * 対応する駅・グループが見つからなかったときは ID をそのまま残し、
+ * 「空欄になって気づけない」状態にはしない。
  */
-export interface RailwayItem {
-    readonly id: string;
-    readonly lineType: string;
-    readonly fromStation: string;
-    readonly toStation: string;
-    /** 所属するグループの ID。未所属なら null */
-    readonly group: string | null;
-    /** 所要時間 (秒) */
-    readonly timeRequired: number;
-    readonly world: string;
-    readonly startPoint: Point3D;
-    readonly endPoint: Point3D;
+export interface RailwayRow extends RailwayItem {
+    /** 出発駅の名前 */
+    readonly fromStationName: string;
+    /** 到着駅の名前 */
+    readonly toStationName: string;
+    /** グループの名前。未所属なら null */
+    readonly groupName: string | null;
 }
 
-/**
- * 路線一覧 API (`GET /api/v1/plugins/advancerailway/railways`) のレスポンス
- */
-export interface RailwaysResponse {
-    readonly railways: RailwayItem[];
+/** 路線一覧ページの loader が返すもの */
+export interface RailwayListData {
+    readonly railways: RailwayRow[];
 }

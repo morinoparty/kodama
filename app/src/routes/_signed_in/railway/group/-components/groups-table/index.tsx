@@ -4,7 +4,7 @@ import { css } from "styled-system/css";
 import { DataTable } from "@/components/data-table";
 import { CodeChip } from "../../../-components/code-chip";
 import { ColorSwatch } from "../../../-components/color-swatch";
-import type { RailwayGroup } from "../../-types";
+import type { RailwayGroup } from "../../../-types";
 
 const nameStyle = css({ fontWeight: "medium", color: "fg" });
 

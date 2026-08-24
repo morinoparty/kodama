@@ -6,7 +6,7 @@ import { DataTable } from "@/components/data-table";
 import { CodeChip } from "../../../-components/code-chip";
 import { ColorSwatch } from "../../../-components/color-swatch";
 import { formatPoint } from "../../../-functions/format-point";
-import type { StationItem } from "../../-types";
+import type { StationItem } from "../../../-types";
 
 const nameStyle = css({ fontWeight: "medium", color: "fg" });
 
