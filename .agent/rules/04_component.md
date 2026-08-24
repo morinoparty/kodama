@@ -55,5 +55,5 @@ import { Collapsible } from "@ark-ui/react/collapsible";
 import ThemeToggle from "@/components/theme-toggle";
 ```
 
-- 表示に必要な共通の設定 (カラーモード切り替え、ダミールーター) は
+- 表示に必要な共通の設定 (ブランドパレットの適用、ダミールーター) は
   `storybook/.storybook/preview.tsx` に入っています。story 側で用意し直さないでください。
