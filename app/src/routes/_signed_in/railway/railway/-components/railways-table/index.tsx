@@ -5,11 +5,10 @@ import { ArrowRightIcon } from "lucide-react";
 import { useMemo } from "react";
 import { css } from "styled-system/css";
 import { DataTable, type DataTableFilter } from "@/components/data-table";
-import { CodeChip } from "../../../-components/code-chip";
 import { EditableCell } from "../../../-components/editable-cell";
 import { GroupSelectCell } from "../../../-components/group-select-cell";
+import { formatCheckedAt } from "../../../-functions/format-checked-at";
 import { formatDuration } from "../../../-functions/format-duration";
-import { formatPoint } from "../../../-functions/format-point";
 import type { RailwayGroup } from "../../../-types";
 import { updateRailwayGroup, updateRailwaySlug } from "../../-api/get-railways";
 import type { RailwayRow } from "../../-types";
@@ -29,6 +28,16 @@ const arrowIconStyle = css({
 });
 
 const worldStyle = css({ textStyle: "xs", color: "fg.muted" });
+
+const mutedTextStyle = css({ textStyle: "xs", color: "fg.subtle" });
+
+// 日時は桁を揃えて読みたいので等幅の数字にする
+const checkedAtStyle = css({
+    textStyle: "xs",
+    color: "fg.muted",
+    fontVariantNumeric: "tabular-nums",
+    whiteSpace: "nowrap",
+});
 
 // 上に並べる絞り込み。選択肢は表示中のデータから自動で作られる
 const FILTERS: readonly DataTableFilter[] = [
@@ -67,6 +76,8 @@ export function RailwaysTable({ data, groups }: RailwaysTableProps) {
             columnHelper.accessor("fromStationName", {
                 id: "section",
                 header: "区間",
+                // 1% + nowrap で、余白を貰わず中身の幅まで縮む
+                meta: { width: "1%" },
                 cell: (info) => (
                     <span className={sectionStyle}>
                         <span>{info.getValue()}</span>
@@ -120,20 +131,16 @@ export function RailwaysTable({ data, groups }: RailwaysTableProps) {
                     <span className={worldStyle}>{info.getValue()}</span>
                 ),
             }),
-            // 座標は大小を比べても意味がないので並べ替えの対象から外す
-            columnHelper.accessor("startPoint", {
-                header: "始点座標",
-                enableSorting: false,
-                cell: (info) => (
-                    <CodeChip>{formatPoint(info.getValue())}</CodeChip>
-                ),
-            }),
-            columnHelper.accessor("endPoint", {
-                header: "終点座標",
-                enableSorting: false,
-                cell: (info) => (
-                    <CodeChip>{formatPoint(info.getValue())}</CodeChip>
-                ),
+            columnHelper.accessor("lastCheckedAt", {
+                header: "最終チェック",
+                cell: (info) => {
+                    const checkedAt = formatCheckedAt(info.getValue());
+                    return checkedAt === null ? (
+                        <span className={mutedTextStyle}>未点検</span>
+                    ) : (
+                        <span className={checkedAtStyle}>{checkedAt}</span>
+                    );
+                },
             }),
         ],
         [groups, router],

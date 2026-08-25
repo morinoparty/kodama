@@ -5,6 +5,7 @@ import {
     getCoreRowModel,
     getFilteredRowModel,
     getSortedRowModel,
+    type RowData,
     type SortingState,
     type TableOptions,
     type Table as TanStackTable,
@@ -225,6 +226,17 @@ export const Table = Object.assign(TableRoot, {
     Empty: TableEmpty,
 });
 
+// 列ごとの見た目の指定。列定義の `meta` に書くと、その列の th に反映される
+declare module "@tanstack/react-table" {
+    interface ColumnMeta<TData extends RowData, TValue> {
+        /**
+         * 列の幅。CSS の値をそのまま渡す。
+         * `"1%"` にすると、その列は中身の幅まで縮む (セルは nowrap のため)
+         */
+        readonly width?: string;
+    }
+}
+
 // --- 絞り込み -----------------------------------------------------------
 
 // 絞り込みバーと表を縦に積む
@@ -385,6 +397,10 @@ export function DataTable<TData>({
                                     <Table.Head
                                         key={header.id}
                                         aria-sort={ariaSortOf(sortDirection)}
+                                        style={{
+                                            width: header.column.columnDef.meta
+                                                ?.width,
+                                        }}
                                     >
                                         {header.column.getCanSort() ? (
                                             <button
