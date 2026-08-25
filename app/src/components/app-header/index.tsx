@@ -1,4 +1,4 @@
-import { Button } from "@morinoparty/chlorophyll-react";
+import { Button, Separator } from "@morinoparty/chlorophyll-react";
 import { MenuIcon, PanelLeftCloseIcon, PanelLeftOpenIcon } from "lucide-react";
 import { css } from "styled-system/css";
 import { AppBreadcrumb } from "../app-breadcrumb";
@@ -36,12 +36,11 @@ const desktopTriggerStyle = css({
     lg: { display: "inline-flex" },
 });
 
-// パンくずとボタンの間の縦罫線。装飾なので読み上げからは外す。
-// Separator も Chlorophyll に無いため、morinoparty/Chlorophyll#77 で提案している
+// パンくずとボタンの間の縦罫線。
+// Separator の縦線は既定で親の高さいっぱいに伸びるので、
+// ヘッダーでは中央にボタンと同じくらいの高さで置き直す
 const separatorStyle = css({
-    flexShrink: "0",
     alignSelf: "center",
-    width: "1px",
     height: "6",
     mx: "1",
     bg: "border",
@@ -98,7 +97,7 @@ export function AppHeader() {
                 )}
             </Button>
 
-            <div className={separatorStyle} aria-hidden="true" />
+            <Separator orientation="vertical" className={separatorStyle} />
 
             <div className={breadcrumbAreaStyle}>
                 <AppBreadcrumb />

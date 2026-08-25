@@ -117,9 +117,17 @@ export const patchGroupSlug = (id: string, slug: string) =>
         "グループの slug の変更",
     );
 
+/** グループの名前を変更する */
+export const patchGroupName = (id: string, name: string) =>
+    patch<RailwayGroup>("groups", id, { name, unset: [] }, "グループ名の変更");
+
 /** 駅の slug を変更する */
 export const patchStationSlug = (id: string, slug: string) =>
     patch<StationItem>("stations", id, { slug, unset: [] }, "駅の slug の変更");
+
+/** 駅の名前を変更する */
+export const patchStationName = (id: string, name: string) =>
+    patch<StationItem>("stations", id, { name, unset: [] }, "駅名の変更");
 
 /** 路線の slug を変更する */
 export const patchRailwaySlug = (id: string, slug: string) =>

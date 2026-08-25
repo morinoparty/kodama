@@ -9,8 +9,10 @@ import { ColorSwatch } from "../../../-components/color-swatch";
 import { EditableCell } from "../../../-components/editable-cell";
 import { formatPoint } from "../../../-functions/format-point";
 import type { StationItem } from "../../../-types";
-import { updateStationSlug } from "../../-api/get-stations";
+import { updateStationName, updateStationSlug } from "../../-api/get-stations";
 
+// 駅名は一覧の主役なので少し強く見せる。Editable の preview / input は
+// 書体を継承するので、外側に指定すれば表示と編集で見え方が揃う
 const nameStyle = css({ fontWeight: "medium", color: "fg" });
 
 const mutedTextStyle = css({ textStyle: "xs", color: "fg.subtle" });
@@ -32,7 +34,7 @@ const columnHelper = createColumnHelper<StationItem>();
 
 /**
  * AdvanceRailway の駅一覧テーブル。
- * slug は表の中でそのまま書き換えられる。
+ * 駅名と slug は表の中でそのまま書き換えられる。
  */
 export function StationsTable({ data }: { data: StationItem[] }) {
     const router = useRouter();
@@ -42,7 +44,18 @@ export function StationsTable({ data }: { data: StationItem[] }) {
             columnHelper.accessor("name", {
                 header: "駅名",
                 cell: (info) => (
-                    <span className={nameStyle}>{info.getValue()}</span>
+                    <span className={nameStyle}>
+                        <EditableCell
+                            value={info.getValue()}
+                            label="駅名"
+                            onSave={async (name) => {
+                                await updateStationName({
+                                    data: { id: info.row.original.id, name },
+                                });
+                                await router.invalidate();
+                            }}
+                        />
+                    </span>
                 ),
             }),
             columnHelper.accessor("slug", {
@@ -51,6 +64,7 @@ export function StationsTable({ data }: { data: StationItem[] }) {
                     <EditableCell
                         value={info.getValue()}
                         label="駅の slug"
+                        mono
                         onSave={async (slug) => {
                             // 更新は必ず UUID 宛てに送る。slug 自体が変わるため
                             await updateStationSlug({
