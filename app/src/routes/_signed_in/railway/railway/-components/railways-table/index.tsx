@@ -4,7 +4,7 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { ArrowRightIcon } from "lucide-react";
 import { useMemo } from "react";
 import { css } from "styled-system/css";
-import { DataTable } from "@/components/data-table";
+import { DataTable, type DataTableFilter } from "@/components/data-table";
 import { CodeChip } from "../../../-components/code-chip";
 import { EditableCell } from "../../../-components/editable-cell";
 import { GroupSelectCell } from "../../../-components/group-select-cell";
@@ -29,6 +29,13 @@ const arrowIconStyle = css({
 });
 
 const worldStyle = css({ textStyle: "xs", color: "fg.muted" });
+
+// 上に並べる絞り込み。選択肢は表示中のデータから自動で作られる
+const FILTERS: readonly DataTableFilter[] = [
+    { columnId: "groupName", label: "グループ" },
+    { columnId: "lineType", label: "種別" },
+    { columnId: "world", label: "ワールド" },
+];
 
 const columnHelper = createColumnHelper<RailwayRow>();
 
@@ -136,6 +143,7 @@ export function RailwaysTable({ data, groups }: RailwaysTableProps) {
         <DataTable
             data={data}
             columns={columns}
+            filters={FILTERS}
             emptyMessage="路線が登録されていません"
         />
     );

@@ -3,7 +3,7 @@ import { useRouter } from "@tanstack/react-router";
 import { createColumnHelper } from "@tanstack/react-table";
 import { useMemo } from "react";
 import { css } from "styled-system/css";
-import { DataTable } from "@/components/data-table";
+import { DataTable, type DataTableFilter } from "@/components/data-table";
 import { CodeChip } from "../../../-components/code-chip";
 import { ColorSwatch } from "../../../-components/color-swatch";
 import { EditableCell } from "../../../-components/editable-cell";
@@ -22,6 +22,11 @@ const numberingListStyle = css({
     flexWrap: "wrap",
     gap: "1",
 });
+
+// 上に並べる絞り込み。選択肢は表示中のデータから自動で作られる
+const FILTERS: readonly DataTableFilter[] = [
+    { columnId: "world", label: "ワールド" },
+];
 
 const columnHelper = createColumnHelper<StationItem>();
 
@@ -125,6 +130,7 @@ export function StationsTable({ data }: { data: StationItem[] }) {
         <DataTable
             data={data}
             columns={columns}
+            filters={FILTERS}
             emptyMessage="駅が登録されていません"
         />
     );

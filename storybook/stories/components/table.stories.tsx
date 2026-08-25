@@ -79,6 +79,19 @@ export const Default: Story = {
     },
 };
 
+// 見出しの上に Select が並び、選ぶとその値の行だけが残る。
+// 選択肢は渡したデータから自動で作られる
+export const Filtered: Story = {
+    args: {
+        data: SAMPLE_DATA,
+        columns,
+        filters: [
+            { columnId: "status", label: "状態" },
+            { columnId: "role", label: "ロール" },
+        ],
+    },
+};
+
 export const Empty: Story = {
     args: {
         data: [],
