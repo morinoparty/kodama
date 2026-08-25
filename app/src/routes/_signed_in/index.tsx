@@ -67,7 +67,7 @@ const avatarStyle = css({
     height: "16",
     borderRadius: "lg",
     flexShrink: "0",
-    bg: "bg.muted",
+    bg: "colorPalette.bg.subtle",
 });
 
 const userNameStyle = css({

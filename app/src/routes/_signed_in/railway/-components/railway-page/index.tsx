@@ -50,7 +50,7 @@ const errorDetailStyle = css({
     textStyle: "xs",
     color: "fg.subtle",
     fontFamily: "mono",
-    bg: "bg.muted",
+    bg: "colorPalette.bg.subtle",
     p: "3",
     borderRadius: "md",
     whiteSpace: "pre-wrap",

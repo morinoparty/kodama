@@ -81,7 +81,7 @@ const brandStyle = css({
     borderRadius: "lg",
     textDecoration: "none",
     color: "fg",
-    _hover: { bg: "bg.muted" },
+    _hover: { bg: "colorPalette.surface" },
     // outline: "none" だと outline-style が none のまま残り、
     // ringWidth を足してもフォーカスリングが描かれない
     _focusVisible: {
@@ -167,8 +167,8 @@ const navLinkStyle = css({
     transitionDuration: "fast",
     transitionTimingFunction: "easeInOut",
     _hover: {
-        bg: "bg.muted",
-        color: "fg",
+        bg: "colorPalette.surface",
+        color: "colorPalette.fg",
     },
     // outline: "none" だと outline-style が none のまま残り、
     // ringWidth を足してもフォーカスリングが描かれない
@@ -179,7 +179,7 @@ const navLinkStyle = css({
         outlineOffset: "2px",
     },
     "&[aria-current='page']": {
-        bg: "colorPalette.bg.subtle",
+        bg: "colorPalette.surface.active",
         color: "colorPalette.fg",
         fontWeight: "semibold",
     },
@@ -229,7 +229,8 @@ const asideStyle = css({
     height: "100dvh",
     width: "64",
     flexShrink: "0",
-    bg: "bg.panel",
+    // 地色より一段淡いブランド色。ページ本体と見分けがつくようにする
+    bg: "colorPalette.bg.subtle",
     borderInlineEndWidth: "1px",
     borderInlineEndStyle: "solid",
     borderColor: "border.subtle",

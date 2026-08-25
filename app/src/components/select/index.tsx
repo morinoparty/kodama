@@ -26,11 +26,11 @@ const triggerStyle = css({
     borderWidth: "1px",
     borderStyle: "solid",
     borderColor: "border.subtle",
-    bg: "bg",
+    bg: "bg.panel",
     textStyle: "sm",
     color: "fg",
     cursor: "pointer",
-    _hover: { bg: "bg.muted" },
+    _hover: { bg: "colorPalette.surface" },
     // outline: "none" だと outline-style が none のまま残り、
     // フォーカスリングが描かれない
     _focusVisible: {
@@ -75,9 +75,9 @@ const itemStyle = css({
     textStyle: "sm",
     color: "fg",
     cursor: "pointer",
-    "&[data-highlighted]": { bg: "bg.muted" },
+    "&[data-highlighted]": { bg: "colorPalette.surface" },
     "&[data-state='checked']": {
-        bg: "colorPalette.bg.subtle",
+        bg: "colorPalette.surface.active",
         color: "colorPalette.fg",
     },
     "& :where(svg)": { width: "3.5", height: "3.5", flexShrink: "0" },

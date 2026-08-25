@@ -23,7 +23,7 @@ const previewStyle = css({
     borderStyle: "dashed",
     borderColor: "transparent",
     cursor: "text",
-    _hover: { bg: "bg.muted", borderColor: "border.subtle" },
+    _hover: { bg: "colorPalette.surface", borderColor: "colorPalette.border" },
     _focusVisible: {
         outlineStyle: "solid",
         outlineWidth: "2px",
@@ -36,7 +36,7 @@ const inputStyle = css({
     fontFamily: "mono",
     textStyle: "xs",
     color: "fg",
-    bg: "bg",
+    bg: "bg.panel",
     px: "1.5",
     py: "0.5",
     borderRadius: "sm",

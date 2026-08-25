@@ -11,7 +11,7 @@ const layoutStyle = css({
     colorPalette: "mori",
     display: "flex",
     minHeight: "100dvh",
-    bg: "bg",
+    bg: "colorPalette.bg",
     color: "fg",
 });
 
