@@ -16,7 +16,8 @@ const headerStyle = css({
     flexShrink: "0",
     height: "14",
     px: { base: "3", sm: "4" },
-    bg: "bg.panel",
+    // サイドバーと同じクロームの面
+    bg: "colorPalette.bg.subtle",
     borderBlockEndWidth: "1px",
     borderBlockEndStyle: "solid",
     borderColor: "border.subtle",

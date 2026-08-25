@@ -13,7 +13,8 @@ const THEME_INIT_SCRIPT = `(function(){try{var stored=window.localStorage.getIte
 const bodyStyle = css({
     colorPalette: "mori",
     minHeight: "100dvh",
-    bg: "bg",
+    // ページの地色。白いパネル (bg.panel) が浮いて見えるよう沈めた色
+    bg: "colorPalette.bg",
     color: "fg",
     overflowWrap: "anywhere",
 });

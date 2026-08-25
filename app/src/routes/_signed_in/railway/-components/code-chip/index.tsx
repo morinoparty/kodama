@@ -5,7 +5,7 @@ const codeChipStyle = css({
     fontFamily: "mono",
     textStyle: "xs",
     color: "fg.muted",
-    bg: "bg.muted",
+    bg: "colorPalette.bg.subtle",
     px: "1.5",
     py: "0.5",
     borderRadius: "sm",

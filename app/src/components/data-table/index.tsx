@@ -38,7 +38,7 @@ const tableStyle = css({
 });
 
 const headerStyle = css({
-    bg: "bg.subtle",
+    bg: "colorPalette.bg.subtle",
     borderBottomWidth: "1px",
     borderBottomStyle: "solid",
     borderColor: "border.subtle",
@@ -54,7 +54,7 @@ const footerStyle = css({
     borderTopWidth: "1px",
     borderTopStyle: "solid",
     borderColor: "border.subtle",
-    bg: "bg.subtle",
+    bg: "colorPalette.bg.subtle",
     fontWeight: "medium",
 });
 
@@ -66,10 +66,10 @@ const rowStyle = css({
     transitionDuration: "fast",
     transitionTimingFunction: "easeInOut",
     _hover: {
-        bg: "bg.muted",
+        bg: "colorPalette.surface",
     },
     "&[data-state='selected']": {
-        bg: "colorPalette.bg.subtle",
+        bg: "colorPalette.surface.active",
     },
 });
 
