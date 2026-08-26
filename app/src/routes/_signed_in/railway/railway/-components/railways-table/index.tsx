@@ -9,6 +9,10 @@ import { EditableCell } from "../../../-components/editable-cell";
 import { GroupSelectCell } from "../../../-components/group-select-cell";
 import { formatCheckedAt } from "../../../-functions/format-checked-at";
 import { formatDuration } from "../../../-functions/format-duration";
+import {
+    OPERATOR_ORDER,
+    operatorOfGroup,
+} from "../../../-functions/group-operator";
 import type { RailwayGroup } from "../../../-types";
 import { updateRailwayGroup, updateRailwaySlug } from "../../-api/get-railways";
 import type { RailwayRow } from "../../-types";
@@ -41,7 +45,13 @@ const checkedAtStyle = css({
 
 // 上に並べる絞り込み。選択肢は表示中のデータから自動で作られる
 const FILTERS: readonly DataTableFilter[] = [
-    { columnId: "groupName", label: "グループ" },
+    // グループは数が多いので、国鉄・私鉄の見出しでまとめて選びやすくする
+    {
+        columnId: "groupName",
+        label: "グループ",
+        groupValue: operatorOfGroup,
+        groupOrder: OPERATOR_ORDER,
+    },
     { columnId: "lineType", label: "種別" },
     { columnId: "world", label: "ワールド" },
 ];

@@ -132,6 +132,13 @@ export interface DataTableFilter {
     readonly label: string;
     /** 値の表示名。省略すると値をそのまま出す */
     readonly formatValue?: (value: string) => string;
+    /**
+     * 選択肢を見出しでまとめる。値から見出しの名前を返す。
+     * 「すべて」「なし」には掛からず、実際の値だけが対象になる
+     */
+    readonly groupValue?: (value: string) => string;
+    /** 見出しを並べる順番。ここに無い見出しは後ろへ回る */
+    readonly groupOrder?: readonly string[];
 }
 
 // --- TanStack Table と組み合わせた表 ------------------------------------
@@ -295,7 +302,7 @@ function FilterSelect<TData>({
     filter: DataTableFilter;
     table: TanStackTable<TData>;
 }) {
-    const { columnId, label, formatValue } = filter;
+    const { columnId, label, formatValue, groupValue, groupOrder } = filter;
     const column = table.getColumn(columnId);
     const coreRows = table.getCoreRowModel().rows;
 
@@ -307,17 +314,26 @@ function FilterSelect<TData>({
 
         // 空値は「なし」として最後にまとめる
         const hasNone = values.delete(NONE_VALUE);
-        const sorted = [...values].sort((a, b) => a.localeCompare(b, "ja"));
+        // 見出しでまとめるときは、まず見出しの順に、その中を名前順に並べる。
+        // Select は隣り合った同じ見出しをひとまとまりとして描く
+        const rank = (value: string) => {
+            const index = groupOrder?.indexOf(groupValue?.(value) ?? "") ?? -1;
+            return index === -1 ? Number.MAX_SAFE_INTEGER : index;
+        };
+        const sorted = [...values].sort(
+            (a, b) => rank(a) - rank(b) || a.localeCompare(b, "ja"),
+        );
 
         return [
             { label: "すべて", value: ALL_VALUE },
             ...sorted.map((value) => ({
                 label: formatValue ? formatValue(value) : value,
                 value,
+                group: groupValue?.(value),
             })),
             ...(hasNone ? [{ label: "なし", value: NONE_VALUE }] : []),
         ];
-    }, [coreRows, columnId, formatValue]);
+    }, [coreRows, columnId, formatValue, groupValue, groupOrder]);
 
     if (!column) {
         return null;
