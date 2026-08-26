@@ -132,6 +132,17 @@ export interface DataTableFilter {
     readonly label: string;
     /** 値の表示名。省略すると値をそのまま出す */
     readonly formatValue?: (value: string) => string;
+    /**
+     * 選択肢を見出しでまとめる。値から見出しの名前を返す。
+     * 「すべて」「なし」には掛からず、実際の値だけが対象になる
+     */
+    readonly groupValue?: (value: string) => string;
+    /**
+     * 選択肢の並び順。値の配列を並べ替えて返す。
+     * 省略すると名前順に並ぶ。見出しでまとめるときは、
+     * 同じ見出しの値が隣り合うように並べ替えること
+     */
+    readonly sortValues?: (values: string[]) => string[];
 }
 
 // --- TanStack Table と組み合わせた表 ------------------------------------
@@ -295,7 +306,7 @@ function FilterSelect<TData>({
     filter: DataTableFilter;
     table: TanStackTable<TData>;
 }) {
-    const { columnId, label, formatValue } = filter;
+    const { columnId, label, formatValue, groupValue, sortValues } = filter;
     const column = table.getColumn(columnId);
     const coreRows = table.getCoreRowModel().rows;
 
@@ -305,19 +316,22 @@ function FilterSelect<TData>({
             values.add(toFilterValue(row.getValue(columnId)));
         }
 
-        // 空値は「なし」として最後にまとめる
+        // 空値は「なし」としてまとめ、実際の値より前に置く
         const hasNone = values.delete(NONE_VALUE);
-        const sorted = [...values].sort((a, b) => a.localeCompare(b, "ja"));
+        const sorted = sortValues
+            ? sortValues([...values])
+            : [...values].sort((a, b) => a.localeCompare(b, "ja"));
 
         return [
             { label: "すべて", value: ALL_VALUE },
+            ...(hasNone ? [{ label: "なし", value: NONE_VALUE }] : []),
             ...sorted.map((value) => ({
                 label: formatValue ? formatValue(value) : value,
                 value,
+                group: groupValue?.(value),
             })),
-            ...(hasNone ? [{ label: "なし", value: NONE_VALUE }] : []),
         ];
-    }, [coreRows, columnId, formatValue]);
+    }, [coreRows, columnId, formatValue, groupValue, sortValues]);
 
     if (!column) {
         return null;

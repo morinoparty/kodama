@@ -3,6 +3,10 @@ import { useMemo, useState } from "react";
 import { css } from "styled-system/css";
 import { notifyFailed, notifySaved } from "@/components/app-toaster";
 import { Select, type SelectOption } from "@/components/select";
+import {
+    operatorOfGroup,
+    sortByOperator,
+} from "../../-functions/group-operator";
 import type { RailwayGroup } from "../../-types";
 
 // 未所属を表す選択肢の値。Select は文字列しか扱えないため、
@@ -38,11 +42,16 @@ export function GroupSelectCell({
 }: GroupSelectCellProps) {
     const [isSaving, setSaving] = useState(false);
 
-    // 「なし」を先頭に足した選択肢
+    // 「なし」を先頭に足し、そのあとを国鉄・私鉄の見出しでまとめた選択肢。
+    // 数が多いので、事業者ごとに固まっていた方が目当ての路線を探しやすい
     const options = useMemo<SelectOption[]>(
         () => [
             { label: "なし", value: NONE_VALUE },
-            ...groups.map((group) => ({ label: group.name, value: group.id })),
+            ...sortByOperator(groups, (group) => group.name).map((group) => ({
+                label: group.name,
+                value: group.id,
+                group: operatorOfGroup(group.name),
+            })),
         ],
         [groups],
     );
