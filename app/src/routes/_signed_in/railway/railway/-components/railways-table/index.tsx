@@ -10,8 +10,8 @@ import { GroupSelectCell } from "../../../-components/group-select-cell";
 import { formatCheckedAt } from "../../../-functions/format-checked-at";
 import { formatDuration } from "../../../-functions/format-duration";
 import {
-    OPERATOR_ORDER,
     operatorOfGroup,
+    sortByOperator,
 } from "../../../-functions/group-operator";
 import type { RailwayGroup } from "../../../-types";
 import { updateRailwayGroup, updateRailwaySlug } from "../../-api/get-railways";
@@ -50,7 +50,7 @@ const FILTERS: readonly DataTableFilter[] = [
         columnId: "groupName",
         label: "グループ",
         groupValue: operatorOfGroup,
-        groupOrder: OPERATOR_ORDER,
+        sortValues: (values) => sortByOperator(values, (value) => value),
     },
     { columnId: "lineType", label: "種別" },
     { columnId: "world", label: "ワールド" },
