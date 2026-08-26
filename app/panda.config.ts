@@ -15,17 +15,9 @@ export default defineConfig({
     exclude: [],
 
     // @morinoparty/chlorophyll-react は node_modules 配下の生 TSX を
-    // そのまま配布しており、variant は実行時に渡される。
-    // Panda の静的抽出が効かないため、使うレシピの CSS を先に出しておく。
-    // 足し忘れるとそのコンポーネントの CSS が 1 行も出ず、
-    // 素の HTML のような見た目になるので、使い始めたら必ずここに追加する
-    staticCss: {
-        recipes: {
-            button: ["*"],
-            drawer: ["*"],
-            toast: ["*"],
-        },
-    },
+    // そのまま配布しており、variant は実行時に渡される。Panda の静的抽出が
+    // 効かないため、preset の各 recipe が自分で `staticCss: ["*"]` を持っている。
+    // こちら側で使うレシピを並べ直す必要はない
 
     jsxFramework: "react",
     outdir: "styled-system",

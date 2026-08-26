@@ -1,87 +1,23 @@
 import {
-    Select as ArkSelect,
+    Select as ChlorophyllSelect,
     createListCollection,
-} from "@ark-ui/react/select";
-import { Portal } from "@morinoparty/chlorophyll-react";
-import { CheckIcon, ChevronsUpDownIcon } from "lucide-react";
+    Portal,
+} from "@morinoparty/chlorophyll-react";
 import { useMemo } from "react";
 import { css, cx } from "styled-system/css";
 
-// Chlorophyll に Select が無いため、Ark UI に Panda でスタイルを当てて作っている。
-// 追加の提案は morinoparty/Chlorophyll#81
+// Chlorophyll の Select は Compound Component で細かく組み立てられるが、
+// このアプリで必要なのは「ラベル + 選択肢の配列から 1 つ選ぶ」だけなので、
+// 表のセルや絞り込みバーから使いやすい形に薄くまとめている
 
 export interface SelectOption {
     readonly label: string;
     readonly value: string;
 }
 
-const triggerStyle = css({
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: "2",
-    px: "2",
-    py: "1",
-    borderRadius: "md",
-    borderWidth: "1px",
-    borderStyle: "solid",
-    borderColor: "border.subtle",
-    bg: "bg.panel",
-    textStyle: "sm",
-    color: "fg",
-    cursor: "pointer",
-    _hover: { bg: "colorPalette.surface" },
-    // outline: "none" だと outline-style が none のまま残り、
-    // フォーカスリングが描かれない
-    _focusVisible: {
-        outlineStyle: "solid",
-        outlineWidth: "2px",
-        outlineColor: "colorPalette.focus.ring",
-        outlineOffset: "2px",
-    },
-    "& :where(svg)": { width: "3.5", height: "3.5", flexShrink: "0" },
-});
-
-const sizeStyles = {
-    sm: css({ minWidth: "32" }),
-    md: css({ minWidth: "44" }),
-};
-
-const contentStyle = css({
-    display: "flex",
-    flexDirection: "column",
-    gap: "0.5",
-    minWidth: "40",
-    maxHeight: "72",
-    overflowY: "auto",
-    p: "1",
-    borderRadius: "md",
-    borderWidth: "1px",
-    borderStyle: "solid",
-    borderColor: "border.subtle",
-    bg: "bg.panel",
-    boxShadow: "md",
-    zIndex: "dropdown",
-});
-
-const itemStyle = css({
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: "2",
-    px: "2",
-    py: "1.5",
-    borderRadius: "sm",
-    textStyle: "sm",
-    color: "fg",
-    cursor: "pointer",
-    "&[data-highlighted]": { bg: "colorPalette.surface" },
-    "&[data-state='checked']": {
-        bg: "colorPalette.surface.active",
-        color: "colorPalette.fg",
-    },
-    "& :where(svg)": { width: "3.5", height: "3.5", flexShrink: "0" },
-});
+// Chlorophyll の Select は幅を親に委ねる (root が width: full)。
+// 表のセルや絞り込みバーには内容分の幅で置きたいので、ここで幅を決める
+const rootStyle = css({ width: "auto", minWidth: "44" });
 
 export interface SelectProps {
     /** 選択中の値 */
@@ -91,7 +27,8 @@ export interface SelectProps {
     /** 読み上げ用の名前 */
     readonly label: string;
     readonly placeholder?: string;
-    readonly size?: "sm" | "md";
+    /** true の間は選び直せなくする (保存中など) */
+    readonly disabled?: boolean;
     readonly className?: string;
 }
 
@@ -107,7 +44,7 @@ export function Select({
     onValueChange,
     label,
     placeholder,
-    size = "md",
+    disabled = false,
     className,
 }: SelectProps) {
     const collection = useMemo(
@@ -116,43 +53,42 @@ export function Select({
     );
 
     return (
-        <ArkSelect.Root
+        <ChlorophyllSelect.Root
             collection={collection}
+            disabled={disabled}
             value={[value]}
             onValueChange={(details) => onValueChange(details.value[0])}
+            // 既定では一覧が Trigger と同じ幅に揃うが、Trigger は内容より狭いことがある。
+            // 選択肢を省略せずに読ませたいので中身の幅に任せる
             positioning={{ sameWidth: false }}
+            className={cx(rootStyle, className)}
         >
-            <ArkSelect.Label className={css({ srOnly: true })}>
+            <ChlorophyllSelect.Label className={css({ srOnly: true })}>
                 {label}
-            </ArkSelect.Label>
-            <ArkSelect.Control>
-                <ArkSelect.Trigger
-                    className={cx(triggerStyle, sizeStyles[size], className)}
-                >
-                    <ArkSelect.ValueText placeholder={placeholder} />
-                    <ChevronsUpDownIcon aria-hidden="true" />
-                </ArkSelect.Trigger>
-            </ArkSelect.Control>
+            </ChlorophyllSelect.Label>
+            <ChlorophyllSelect.Control>
+                <ChlorophyllSelect.Trigger>
+                    <ChlorophyllSelect.ValueText placeholder={placeholder} />
+                    <ChlorophyllSelect.Indicator />
+                </ChlorophyllSelect.Trigger>
+            </ChlorophyllSelect.Control>
             <Portal>
-                <ArkSelect.Positioner>
-                    <ArkSelect.Content className={contentStyle}>
+                <ChlorophyllSelect.Positioner>
+                    <ChlorophyllSelect.Content>
                         {options.map((option) => (
-                            <ArkSelect.Item
+                            <ChlorophyllSelect.Item
                                 key={option.value}
                                 item={option}
-                                className={itemStyle}
                             >
-                                <ArkSelect.ItemText>
+                                <ChlorophyllSelect.ItemText>
                                     {option.label}
-                                </ArkSelect.ItemText>
-                                <ArkSelect.ItemIndicator>
-                                    <CheckIcon aria-hidden="true" />
-                                </ArkSelect.ItemIndicator>
-                            </ArkSelect.Item>
+                                </ChlorophyllSelect.ItemText>
+                                <ChlorophyllSelect.ItemIndicator />
+                            </ChlorophyllSelect.Item>
                         ))}
-                    </ArkSelect.Content>
-                </ArkSelect.Positioner>
+                    </ChlorophyllSelect.Content>
+                </ChlorophyllSelect.Positioner>
             </Portal>
-        </ArkSelect.Root>
+        </ChlorophyllSelect.Root>
     );
 }

@@ -95,6 +95,7 @@ export function RailwaysTable({ data, groups }: RailwaysTableProps) {
                     <EditableCell
                         value={info.getValue()}
                         label="路線の slug"
+                        mono
                         onSave={async (slug) => {
                             // 更新は必ず UUID 宛てに送る。slug 自体が変わるため
                             await updateRailwaySlug({

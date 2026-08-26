@@ -18,8 +18,8 @@ const meta = {
         docs: {
             description: {
                 component: [
-                    "パンくずリスト。Chlorophyll にも Ark UI にも該当するコンポーネントが無いため、",
-                    "nav > ol > li のセマンティックな HTML に Panda のトークンでスタイルを当てて作っている。",
+                    "パンくずリスト。Chlorophyll の Breadcrumb に TanStack Router の Link を差し込み、",
+                    "1 行に収める見た目とリンクを持たない段 (Text) だけをこのアプリ側で足している。",
                     "実際の画面では AppBreadcrumb がルートの staticData から段を組み立てる。",
                 ].join(""),
             },

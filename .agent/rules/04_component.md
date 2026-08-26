@@ -3,7 +3,8 @@
 ## 何で作るか
 
 1. まず `@morinoparty/chlorophyll-react` (Chlorophyll) に使えるコンポーネントがないか探します。
-   Button / Menu / Drawer / List / Tooltip / Badge / Spinner / Skeleton / ModalDialog / Portal などがあります。
+   Button / Menu / Drawer / List / Tooltip / Badge / Spinner / Skeleton / ModalDialog / Portal /
+   Table / Select / Editable / Breadcrumb / Separator / Accordion / Pagination などがあります。
 
 ```tsx
 import { Button } from "@morinoparty/chlorophyll-react";

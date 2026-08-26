@@ -1,5 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
-import { fetchGroups, patchGroupSlug } from "../../-api/advance-railway";
+import {
+    fetchGroups,
+    patchGroupName,
+    patchGroupSlug,
+} from "../../-api/advance-railway";
 
 /**
  * AdvanceRailway のグループ一覧を取得する。
@@ -13,3 +17,8 @@ export const getGroups = createServerFn().handler(async () => ({
 export const updateGroupSlug = createServerFn({ method: "POST" })
     .inputValidator((input: { id: string; slug: string }) => input)
     .handler(({ data }) => patchGroupSlug(data.id, data.slug));
+
+/** グループの名前を変更する */
+export const updateGroupName = createServerFn({ method: "POST" })
+    .inputValidator((input: { id: string; name: string }) => input)
+    .handler(({ data }) => patchGroupName(data.id, data.name));

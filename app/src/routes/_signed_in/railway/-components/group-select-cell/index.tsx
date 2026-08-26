@@ -1,5 +1,6 @@
 import { Spinner } from "@morinoparty/chlorophyll-react";
 import { useMemo, useState } from "react";
+import { css } from "styled-system/css";
 import { notifyFailed, notifySaved } from "@/components/app-toaster";
 import { Select, type SelectOption } from "@/components/select";
 import type { RailwayGroup } from "../../-types";
@@ -7,6 +8,13 @@ import type { RailwayGroup } from "../../-types";
 // 未所属を表す選択肢の値。Select は文字列しか扱えないため、
 // null の代わりに使う番兵を 1 か所で定義する
 const NONE_VALUE = "__none__";
+
+// 保存中もセルの幅が変わらないよう、Select の隣にスピナーを添える
+const rootStyle = css({
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "2",
+});
 
 export interface GroupSelectCellProps {
     /** 現在所属しているグループの UUID。未所属なら null */
@@ -20,8 +28,8 @@ export interface GroupSelectCellProps {
 /**
  * 路線の所属グループをその場で選び直すセル。
  *
- * 「なし」を選ぶと未所属に戻す。保存中はスピナーを出して二重送信を防ぎ、
- * 失敗したときは toast で理由を出す。
+ * 「なし」を選ぶと未所属に戻す。保存中は選び直せなくしてスピナーを出し、
+ * 二重送信を防ぐ。失敗したときは toast で理由を出す。
  */
 export function GroupSelectCell({
     value,
@@ -58,17 +66,16 @@ export function GroupSelectCell({
         }
     };
 
-    if (isSaving) {
-        return <Spinner size="sm" aria-label="保存中" />;
-    }
-
     return (
-        <Select
-            label="所属グループ"
-            size="sm"
-            value={value ?? NONE_VALUE}
-            options={options}
-            onValueChange={handleChange}
-        />
+        <span className={rootStyle}>
+            <Select
+                label="所属グループ"
+                value={value ?? NONE_VALUE}
+                options={options}
+                disabled={isSaving}
+                onValueChange={handleChange}
+            />
+            {isSaving ? <Spinner size="sm" aria-label="保存中" /> : null}
+        </span>
     );
 }

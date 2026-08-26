@@ -1,7 +1,7 @@
 import { Badge } from "@morinoparty/chlorophyll-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { createColumnHelper } from "@tanstack/react-table";
-import { DataTable, type DataTableProps, Table } from "@/components/data-table";
+import { DataTable, type DataTableProps } from "@/components/data-table";
 
 // DataTable はジェネリックなので、Storybook の型推論では TData が unknown になる。
 // ここで扱うデータの型を明示して meta / Story を組み立てる
@@ -15,9 +15,9 @@ const meta: Meta<SampleTableProps> = {
         docs: {
             description: {
                 component: [
-                    "Panda CSS と Ark UI でスタイリングしたデータテーブル。",
-                    "`DataTable` に列定義とデータを渡すと、TanStack Table の状態管理込みで描画する。",
-                    "凝った表を組みたいときは `Table.*` のプリミティブを直接使う。",
+                    "Chlorophyll の Table に TanStack Table の状態管理を載せたデータテーブル。",
+                    "`DataTable` に列定義とデータを渡すと、並べ替えと絞り込み込みで描画する。",
+                    "凝った表を組みたいときは Chlorophyll の `Table.*` プリミティブを直接使う。",
                 ].join(""),
             },
         },
@@ -98,28 +98,4 @@ export const Empty: Story = {
         columns,
         emptyMessage: "データが存在しません",
     },
-};
-
-// プリミティブを直接組み合わせる例
-export const Primitives: Story = {
-    args: { data: [], columns },
-    render: () => (
-        <Table>
-            <Table.Header>
-                <Table.Row>
-                    <Table.Head>ID</Table.Head>
-                    <Table.Head>名前</Table.Head>
-                </Table.Row>
-            </Table.Header>
-            <Table.Body>
-                {SAMPLE_DATA.map((row) => (
-                    <Table.Row key={row.id}>
-                        <Table.Cell>{row.id}</Table.Cell>
-                        <Table.Cell>{row.name}</Table.Cell>
-                    </Table.Row>
-                ))}
-            </Table.Body>
-            <Table.Caption>プリミティブだけで組んだ表</Table.Caption>
-        </Table>
-    ),
 };
