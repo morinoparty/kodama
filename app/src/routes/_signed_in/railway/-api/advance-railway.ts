@@ -121,6 +121,32 @@ export const patchGroupSlug = (id: string, slug: string) =>
 export const patchGroupName = (id: string, name: string) =>
     patch<RailwayGroup>("groups", id, { name, unset: [] }, "グループ名の変更");
 
+/**
+ * グループのナンバリング接頭辞を変更する。
+ * `prefix` に null を渡すとナンバリングなしに戻る (値の削除は `unset` で指定する)
+ */
+export const patchGroupNumberingPrefix = (id: string, prefix: string | null) =>
+    patch<RailwayGroup>(
+        "groups",
+        id,
+        prefix === null
+            ? { unset: ["numberingPrefix"] }
+            : { numberingPrefix: prefix, unset: [] },
+        "ナンバリング接頭辞の変更",
+    );
+
+/**
+ * グループのナンバリング開始番号を変更する。
+ * 接頭辞と違い `unset` に対応しないため、既定へ戻したいときは 1 を送る
+ */
+export const patchGroupNumberingStart = (id: string, start: number) =>
+    patch<RailwayGroup>(
+        "groups",
+        id,
+        { numberingStart: start, unset: [] },
+        "ナンバリング開始番号の変更",
+    );
+
 /** 駅の slug を変更する */
 export const patchStationSlug = (id: string, slug: string) =>
     patch<StationItem>("stations", id, { slug, unset: [] }, "駅の slug の変更");

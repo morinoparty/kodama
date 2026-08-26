@@ -9,6 +9,13 @@ export interface EditableCellProps {
     readonly label: string;
     /** slug や ID のように等幅で読ませたい値なら true */
     readonly mono?: boolean;
+    /**
+     * 空にする操作を許すか。
+     * true なら空文字も `onSave` に渡すので、未設定に戻す項目で使う
+     */
+    readonly allowEmpty?: boolean;
+    /** 値が空のときに薄く出す文言 (例: `なし`) */
+    readonly placeholder?: string;
     /** 確定時に呼ばれる。失敗したら例外を投げる */
     readonly onSave: (next: string) => Promise<void>;
 }
@@ -24,6 +31,8 @@ export function EditableCell({
     value,
     label,
     mono = false,
+    allowEmpty = false,
+    placeholder,
     onSave,
 }: EditableCellProps) {
     const [isSaving, setSaving] = useState(false);
@@ -34,8 +43,10 @@ export function EditableCell({
 
     const handleSubmit = async (next: string) => {
         const trimmed = next.trim();
-        // 変化なし・空文字は API を叩かず、黙って元の値に戻す
-        if (trimmed === value || trimmed === "") {
+        const isClearing = trimmed === "";
+        // 変化なしは API を叩かず、黙って元の値に戻す。
+        // 空にできない項目では、空のまま確定しようとしたときも同じ扱いにする
+        if (trimmed === value || (isClearing && !allowEmpty)) {
             resetDraft();
             return;
         }
@@ -43,7 +54,11 @@ export function EditableCell({
         setSaving(true);
         try {
             await onSave(trimmed);
-            notifySaved(`${label}を ${trimmed} に変更しました`);
+            notifySaved(
+                isClearing
+                    ? `${label}を未設定にしました`
+                    : `${label}を ${trimmed} に変更しました`,
+            );
         } catch (error) {
             notifyFailed(error);
             resetDraft();
@@ -56,6 +71,7 @@ export function EditableCell({
         <Editable.Root
             key={`${value}-${revision}`}
             defaultValue={value}
+            placeholder={placeholder}
             activationMode="click"
             submitMode="both"
             mono={mono}
