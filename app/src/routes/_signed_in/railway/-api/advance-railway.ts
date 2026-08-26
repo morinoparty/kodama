@@ -92,7 +92,10 @@ export const fetchStations = async (): Promise<StationItem[]> => {
 
 /** グループを 1 件取得する。存在しなければ API が 404 を返す */
 export const fetchGroup = (id: string) =>
-    fetchPluginApi<RailwayGroup>(`${BASE_PATH}/groups/${id}`, "鉄道グループ");
+    fetchPluginApi<RailwayGroup>(
+        `${BASE_PATH}/groups/${id}`,
+        "鉄道グループの取得",
+    );
 
 // `GET`/`PUT` /groups/{id}/stations のレスポンス。入れ子の駅も
 // `numberings` が省かれることがあるため、一覧と同じように整えて返す
@@ -118,7 +121,7 @@ export const fetchGroupStations = async (
     toGroupStations(
         await fetchPluginApi<RawGroupStationsResponse>(
             `${BASE_PATH}/groups/${groupId}/stations`,
-            "グループ内の駅の並び",
+            "グループ内の駅の並びの取得",
         ),
     );
 
