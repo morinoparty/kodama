@@ -333,7 +333,6 @@ function FilterSelect<TData>({
             </span>
             <Select
                 label={`${label}で絞り込む`}
-                size="sm"
                 value={current}
                 options={options}
                 onValueChange={(value) =>

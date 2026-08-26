@@ -17,10 +17,7 @@ export interface SelectOption {
 
 // Chlorophyll の Select は幅を親に委ねる (root が width: full)。
 // 表のセルや絞り込みバーには内容分の幅で置きたいので、ここで幅を決める
-const sizeStyles = {
-    sm: css({ width: "auto", minWidth: "32" }),
-    md: css({ width: "auto", minWidth: "44" }),
-};
+const rootStyle = css({ width: "auto", minWidth: "44" });
 
 export interface SelectProps {
     /** 選択中の値 */
@@ -30,7 +27,6 @@ export interface SelectProps {
     /** 読み上げ用の名前 */
     readonly label: string;
     readonly placeholder?: string;
-    readonly size?: "sm" | "md";
     /** true の間は選び直せなくする (保存中など) */
     readonly disabled?: boolean;
     readonly className?: string;
@@ -48,7 +44,6 @@ export function Select({
     onValueChange,
     label,
     placeholder,
-    size = "md",
     disabled = false,
     className,
 }: SelectProps) {
@@ -60,14 +55,13 @@ export function Select({
     return (
         <ChlorophyllSelect.Root
             collection={collection}
-            size={size}
             disabled={disabled}
             value={[value]}
             onValueChange={(details) => onValueChange(details.value[0])}
             // 既定では一覧が Trigger と同じ幅に揃うが、Trigger は内容より狭いことがある。
             // 選択肢を省略せずに読ませたいので中身の幅に任せる
             positioning={{ sameWidth: false }}
-            className={cx(sizeStyles[size], className)}
+            className={cx(rootStyle, className)}
         >
             <ChlorophyllSelect.Label className={css({ srOnly: true })}>
                 {label}

@@ -70,7 +70,6 @@ export function GroupSelectCell({
         <span className={rootStyle}>
             <Select
                 label="所属グループ"
-                size="sm"
                 value={value ?? NONE_VALUE}
                 options={options}
                 disabled={isSaving}
