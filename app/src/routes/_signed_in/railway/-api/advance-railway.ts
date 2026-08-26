@@ -90,6 +90,15 @@ export const fetchStations = async (): Promise<StationItem[]> => {
     return stations.map(normalizeStation);
 };
 
+/** 駅を 1 件取得する。存在しなければ API が 404 を返す */
+export const fetchStation = async (id: string): Promise<StationItem> =>
+    normalizeStation(
+        await fetchPluginApi<RawStation>(
+            `${BASE_PATH}/stations/${id}`,
+            "駅の取得",
+        ),
+    );
+
 /** グループを 1 件取得する。存在しなければ API が 404 を返す */
 export const fetchGroup = (id: string) =>
     fetchPluginApi<RailwayGroup>(

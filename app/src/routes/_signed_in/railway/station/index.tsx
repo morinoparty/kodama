@@ -19,14 +19,15 @@ export const Route = createFileRoute("/_signed_in/railway/station/")({
 });
 
 const TITLE = "駅一覧";
-const DESCRIPTION = "AdvanceRailway に登録されている駅の一覧です。";
+const DESCRIPTION =
+    "AdvanceRailway に登録されている駅の一覧です。グループに足した駅はそのグループの末尾に付くので、並び順はグループの詳細ページで整えてください。";
 
 function StationPage() {
-    const { stations } = Route.useLoaderData();
+    const { stations, groups } = Route.useLoaderData();
 
     return (
         <RailwayPage title={TITLE} description={DESCRIPTION}>
-            <StationsTable data={stations} />
+            <StationsTable data={stations} groups={groups} />
         </RailwayPage>
     );
 }

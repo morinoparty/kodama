@@ -60,46 +60,67 @@ const toSections = (options: readonly SelectOption[]): OptionSection[] => {
 // 表のセルや絞り込みバーには内容分の幅で置きたいので、ここで幅を決める
 const rootStyle = css({ width: "auto", minWidth: "44" });
 
-export interface SelectProps {
-    /** 選択中の値 */
-    readonly value: string;
+interface SelectBaseProps {
     readonly options: readonly SelectOption[];
-    readonly onValueChange: (value: string) => void;
     /** 読み上げ用の名前 */
     readonly label: string;
+    /** 何も選ばれていないときに薄く出す文言 */
     readonly placeholder?: string;
     /** true の間は選び直せなくする (保存中など) */
     readonly disabled?: boolean;
     readonly className?: string;
 }
 
+/** 1 つだけ選ぶときの props */
+export interface SingleSelectProps extends SelectBaseProps {
+    readonly multiple?: false;
+    /** 選択中の値 */
+    readonly value: string;
+    readonly onValueChange: (value: string) => void;
+}
+
+/** 複数選べるときの props */
+export interface MultipleSelectProps extends SelectBaseProps {
+    readonly multiple: true;
+    /** 選択中の値。空配列なら placeholder が出る */
+    readonly value: readonly string[];
+    readonly onValueChange: (value: string[]) => void;
+}
+
+export type SelectProps = SingleSelectProps | MultipleSelectProps;
+
 /**
- * 1 つだけ選ぶセレクト。
+ * 選択肢から選ぶセレクト。`multiple` を付けると複数選べる。
  *
  * メニューは Portal 経由で描く。表のように `overflow-x: auto` の中に置いても
  * 切れないようにするため。
  */
-export function Select({
-    value,
-    options,
-    onValueChange,
-    label,
-    placeholder,
-    disabled = false,
-    className,
-}: SelectProps) {
+export function Select(props: SelectProps) {
+    const { options, label, placeholder, disabled = false, className } = props;
+
     const collection = useMemo(
         () => createListCollection({ items: [...options] }),
         [options],
     );
     const sections = useMemo(() => toSections(options), [options]);
 
+    // Ark の値は常に配列。1 つだけ選ぶときはここで包み・開いて、
+    // 呼び出し側は素の文字列だけを見ればよいようにする
+    const value = props.multiple ? [...props.value] : [props.value];
+
     return (
         <ChlorophyllSelect.Root
             collection={collection}
             disabled={disabled}
-            value={[value]}
-            onValueChange={(details) => onValueChange(details.value[0])}
+            multiple={props.multiple}
+            value={value}
+            onValueChange={(details) => {
+                if (props.multiple) {
+                    props.onValueChange(details.value);
+                } else {
+                    props.onValueChange(details.value[0]);
+                }
+            }}
             // 既定では一覧が Trigger と同じ幅に揃うが、Trigger は内容より狭いことがある。
             // 選択肢を省略せずに読ませたいので中身の幅に任せる
             positioning={{ sameWidth: false }}

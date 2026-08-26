@@ -8,8 +8,13 @@ import { CodeChip } from "../../../-components/code-chip";
 import { ColorSwatch } from "../../../-components/color-swatch";
 import { EditableCell } from "../../../-components/editable-cell";
 import { formatPoint } from "../../../-functions/format-point";
-import type { StationItem } from "../../../-types";
-import { updateStationName, updateStationSlug } from "../../-api/get-stations";
+import type { RailwayGroup, StationItem } from "../../../-types";
+import {
+    updateStationGroups,
+    updateStationName,
+    updateStationSlug,
+} from "../../-api/get-stations";
+import { StationGroupsCell } from "../station-groups-cell";
 
 // 駅名は一覧の主役なので少し強く見せる。Editable の preview / input は
 // 書体を継承するので、外側に指定すれば表示と編集で見え方が揃う
@@ -32,11 +37,17 @@ const FILTERS: readonly DataTableFilter[] = [
 
 const columnHelper = createColumnHelper<StationItem>();
 
+export interface StationsTableProps {
+    readonly data: StationItem[];
+    /** 所属グループを選び直すための選択肢 */
+    readonly groups: RailwayGroup[];
+}
+
 /**
  * AdvanceRailway の駅一覧テーブル。
- * 駅名と slug は表の中でそのまま書き換えられる。
+ * 駅名・slug と所属グループは表の中でそのまま書き換えられる。
  */
-export function StationsTable({ data }: { data: StationItem[] }) {
+export function StationsTable({ data, groups }: StationsTableProps) {
     const router = useRouter();
 
     const columns = useMemo(
@@ -70,6 +81,31 @@ export function StationsTable({ data }: { data: StationItem[] }) {
                             await updateStationSlug({
                                 data: { id: info.row.original.id, slug },
                             });
+                            await router.invalidate();
+                        }}
+                    />
+                ),
+            }),
+            // 所属グループを選び直す列。ナンバリングはこの並びから決まるので、
+            // 番号そのものは次の列に読み取り専用で出している
+            columnHelper.display({
+                id: "groups",
+                header: "グループ",
+                cell: (info) => (
+                    <StationGroupsCell
+                        value={info.row.original.numberings.map(
+                            (numbering) => numbering.group,
+                        )}
+                        groups={groups}
+                        onSave={async (groupIds) => {
+                            await updateStationGroups({
+                                data: {
+                                    stationId: info.row.original.id,
+                                    groupIds,
+                                },
+                            });
+                            // グループごとに 1 回ずつ書くので、途中で失敗すると
+                            // 一部だけ反映された状態になる。成否によらず読み直す
                             await router.invalidate();
                         }}
                     />
@@ -137,7 +173,7 @@ export function StationsTable({ data }: { data: StationItem[] }) {
                 },
             }),
         ],
-        [router],
+        [groups, router],
     );
 
     return (
