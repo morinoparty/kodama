@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import {
     fetchGroups,
     patchGroupName,
+    patchGroupNumberingPrefix,
+    patchGroupNumberingStart,
     patchGroupSlug,
 } from "../../-api/advance-railway";
 
@@ -22,3 +24,16 @@ export const updateGroupSlug = createServerFn({ method: "POST" })
 export const updateGroupName = createServerFn({ method: "POST" })
     .inputValidator((input: { id: string; name: string }) => input)
     .handler(({ data }) => patchGroupName(data.id, data.name));
+
+/**
+ * グループのナンバリング接頭辞を変更する。
+ * `prefix` が null なら未設定に戻す
+ */
+export const updateGroupNumberingPrefix = createServerFn({ method: "POST" })
+    .inputValidator((input: { id: string; prefix: string | null }) => input)
+    .handler(({ data }) => patchGroupNumberingPrefix(data.id, data.prefix));
+
+/** グループのナンバリング開始番号を変更する */
+export const updateGroupNumberingStart = createServerFn({ method: "POST" })
+    .inputValidator((input: { id: string; start: number }) => input)
+    .handler(({ data }) => patchGroupNumberingStart(data.id, data.start));
