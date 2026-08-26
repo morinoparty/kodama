@@ -65,7 +65,6 @@ export function GroupSelectCell({
     return (
         <Select
             label="所属グループ"
-            size="sm"
             value={value ?? NONE_VALUE}
             options={options}
             onValueChange={handleChange}

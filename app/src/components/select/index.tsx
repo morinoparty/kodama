@@ -27,6 +27,7 @@ const triggerStyle = css({
     borderStyle: "solid",
     borderColor: "border.subtle",
     bg: "bg.panel",
+    minWidth: "44",
     textStyle: "sm",
     color: "fg",
     cursor: "pointer",
@@ -41,11 +42,6 @@ const triggerStyle = css({
     },
     "& :where(svg)": { width: "3.5", height: "3.5", flexShrink: "0" },
 });
-
-const sizeStyles = {
-    sm: css({ minWidth: "32" }),
-    md: css({ minWidth: "44" }),
-};
 
 const contentStyle = css({
     display: "flex",
@@ -91,7 +87,6 @@ export interface SelectProps {
     /** 読み上げ用の名前 */
     readonly label: string;
     readonly placeholder?: string;
-    readonly size?: "sm" | "md";
     readonly className?: string;
 }
 
@@ -107,7 +102,6 @@ export function Select({
     onValueChange,
     label,
     placeholder,
-    size = "md",
     className,
 }: SelectProps) {
     const collection = useMemo(
@@ -126,9 +120,7 @@ export function Select({
                 {label}
             </ArkSelect.Label>
             <ArkSelect.Control>
-                <ArkSelect.Trigger
-                    className={cx(triggerStyle, sizeStyles[size], className)}
-                >
+                <ArkSelect.Trigger className={cx(triggerStyle, className)}>
                     <ArkSelect.ValueText placeholder={placeholder} />
                     <ChevronsUpDownIcon aria-hidden="true" />
                 </ArkSelect.Trigger>
