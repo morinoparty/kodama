@@ -89,6 +89,20 @@ export interface RailwayItem {
     readonly lastCheckedAt?: string | null;
 }
 
+/**
+ * グループ内での駅の並びの 1 件。
+ *
+ * `numbering` はプラグイン側が `numberingPrefix + (numberingStart + position)` で
+ * 組み立てた値で、ナンバリングを持たないグループでは null になる
+ */
+export interface GroupStation {
+    /** グループ内での並び順 (0 始まり) */
+    readonly position: number;
+    /** 採番された駅番号 (例: `M01`)。未採番なら null */
+    readonly numbering?: string | null;
+    readonly station: StationItem;
+}
+
 /** `GET /api/v1/plugins/advancerailway/groups` のレスポンス */
 export interface RailwayGroupsResponse {
     readonly groups: RailwayGroup[];
@@ -102,4 +116,12 @@ export interface RailwaysResponse {
 /** `GET /api/v1/plugins/advancerailway/stations` のレスポンス */
 export interface StationsResponse {
     readonly stations: StationItem[];
+}
+
+/**
+ * `GET /api/v1/plugins/advancerailway/groups/{id}/stations` のレスポンス。
+ * `PUT` も同じ形を返す
+ */
+export interface GroupStationsResponse {
+    readonly stations: GroupStation[];
 }
