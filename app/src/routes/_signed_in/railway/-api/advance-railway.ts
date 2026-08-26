@@ -1,5 +1,6 @@
 import { fetchPluginApi } from "@/lib/plugin-api";
 import type {
+    GroupStation,
     RailwayGroup,
     RailwayGroupsResponse,
     RailwayItem,
@@ -74,6 +75,11 @@ interface RawStationsResponse {
     readonly stations: RawStation[];
 }
 
+const normalizeStation = (station: RawStation): StationItem => ({
+    ...station,
+    numberings: station.numberings ?? [],
+});
+
 export const fetchStations = async (): Promise<StationItem[]> => {
     const stations = await fetchAllPages<RawStationsResponse, RawStation>(
         `${BASE_PATH}/stations`,
@@ -81,11 +87,64 @@ export const fetchStations = async (): Promise<StationItem[]> => {
         (response) => response.stations,
     );
 
-    return stations.map((station) => ({
-        ...station,
-        numberings: station.numberings ?? [],
-    }));
+    return stations.map(normalizeStation);
 };
+
+/** グループを 1 件取得する。存在しなければ API が 404 を返す */
+export const fetchGroup = (id: string) =>
+    fetchPluginApi<RailwayGroup>(
+        `${BASE_PATH}/groups/${id}`,
+        "鉄道グループの取得",
+    );
+
+// `GET`/`PUT` /groups/{id}/stations のレスポンス。入れ子の駅も
+// `numberings` が省かれることがあるため、一覧と同じように整えて返す
+interface RawGroupStationsResponse {
+    readonly stations: (Omit<GroupStation, "station"> & {
+        station: RawStation;
+    })[];
+}
+
+const toGroupStations = (response: RawGroupStationsResponse): GroupStation[] =>
+    (response.stations ?? []).map((entry) => ({
+        ...entry,
+        station: normalizeStation(entry.station),
+    }));
+
+/**
+ * グループに属する駅を並び順で取得する。
+ * この API はページングを持たず、常に全件を並び順で返す
+ */
+export const fetchGroupStations = async (
+    groupId: string,
+): Promise<GroupStation[]> =>
+    toGroupStations(
+        await fetchPluginApi<RawGroupStationsResponse>(
+            `${BASE_PATH}/groups/${groupId}/stations`,
+            "グループ内の駅の並びの取得",
+        ),
+    );
+
+/**
+ * グループに属する駅の並びを、渡した順序でまるごと置き換える。
+ *
+ * 1 件ずつの移動ではなく一括置換なのは API 側の仕様。配列の並びがそのまま
+ * `position` の 0, 1, 2 … になり、同じ入力を 2 回送っても結果が変わらない。
+ * 更新は必ず UUID で指定する (slug も受け付けるが、slug は書き換わりうるため)。
+ *
+ * 置き換え後の並びが返るので、そのまま新しい状態として使える。
+ */
+export const putGroupStations = async (
+    groupId: string,
+    stationIds: readonly string[],
+): Promise<GroupStation[]> =>
+    toGroupStations(
+        await fetchPluginApi<RawGroupStationsResponse>(
+            `${BASE_PATH}/groups/${groupId}/stations`,
+            "駅の並びの変更",
+            { method: "PUT", body: { stations: stationIds } },
+        ),
+    );
 
 /**
  * PATCH のリクエストボディ。

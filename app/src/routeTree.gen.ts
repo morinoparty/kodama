@@ -14,6 +14,7 @@ import { Route as Signed_inIndexRouteImport } from './routes/_signed_in/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AuthSignInIndexRouteImport } from './routes/auth/sign-in/index'
 import { Route as Signed_inRailwayGroupIndexRouteImport } from './routes/_signed_in/railway/group/index'
+import { Route as Signed_inRailwayGroupIdRouteImport } from './routes/_signed_in/railway/group/$id'
 import { Route as Signed_inRailwayRailwayIndexRouteImport } from './routes/_signed_in/railway/railway/index'
 import { Route as Signed_inRailwayStationIndexRouteImport } from './routes/_signed_in/railway/station/index'
 
@@ -42,6 +43,11 @@ const Signed_inRailwayGroupIndexRoute =
     path: '/railway/group/',
     getParentRoute: () => Signed_inRoute,
   } as any)
+const Signed_inRailwayGroupIdRoute = Signed_inRailwayGroupIdRouteImport.update({
+  id: '/railway/group/$id',
+  path: '/railway/group/$id',
+  getParentRoute: () => Signed_inRoute,
+} as any)
 const Signed_inRailwayRailwayIndexRoute =
   Signed_inRailwayRailwayIndexRouteImport.update({
     id: '/railway/railway/',
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/': typeof Signed_inIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/auth/sign-in/': typeof AuthSignInIndexRoute
+  '/railway/group/$id': typeof Signed_inRailwayGroupIdRoute
   '/railway/group/': typeof Signed_inRailwayGroupIndexRoute
   '/railway/railway/': typeof Signed_inRailwayRailwayIndexRoute
   '/railway/station/': typeof Signed_inRailwayStationIndexRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/': typeof Signed_inIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/auth/sign-in': typeof AuthSignInIndexRoute
+  '/railway/group/$id': typeof Signed_inRailwayGroupIdRoute
   '/railway/group': typeof Signed_inRailwayGroupIndexRoute
   '/railway/railway': typeof Signed_inRailwayRailwayIndexRoute
   '/railway/station': typeof Signed_inRailwayStationIndexRoute
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/_signed_in/': typeof Signed_inIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/auth/sign-in/': typeof AuthSignInIndexRoute
+  '/_signed_in/railway/group/$id': typeof Signed_inRailwayGroupIdRoute
   '/_signed_in/railway/group/': typeof Signed_inRailwayGroupIndexRoute
   '/_signed_in/railway/railway/': typeof Signed_inRailwayRailwayIndexRoute
   '/_signed_in/railway/station/': typeof Signed_inRailwayStationIndexRoute
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/api/auth/$'
     | '/auth/sign-in/'
+    | '/railway/group/$id'
     | '/railway/group/'
     | '/railway/railway/'
     | '/railway/station/'
@@ -95,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/api/auth/$'
     | '/auth/sign-in'
+    | '/railway/group/$id'
     | '/railway/group'
     | '/railway/railway'
     | '/railway/station'
@@ -104,6 +115,7 @@ export interface FileRouteTypes {
     | '/_signed_in/'
     | '/api/auth/$'
     | '/auth/sign-in/'
+    | '/_signed_in/railway/group/$id'
     | '/_signed_in/railway/group/'
     | '/_signed_in/railway/railway/'
     | '/_signed_in/railway/station/'
@@ -152,6 +164,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Signed_inRailwayGroupIndexRouteImport
       parentRoute: typeof Signed_inRoute
     }
+    '/_signed_in/railway/group/$id': {
+      id: '/_signed_in/railway/group/$id'
+      path: '/railway/group/$id'
+      fullPath: '/railway/group/$id'
+      preLoaderRoute: typeof Signed_inRailwayGroupIdRouteImport
+      parentRoute: typeof Signed_inRoute
+    }
     '/_signed_in/railway/railway/': {
       id: '/_signed_in/railway/railway/'
       path: '/railway/railway'
@@ -171,6 +190,7 @@ declare module '@tanstack/react-router' {
 
 interface Signed_inRouteChildren {
   Signed_inIndexRoute: typeof Signed_inIndexRoute
+  Signed_inRailwayGroupIdRoute: typeof Signed_inRailwayGroupIdRoute
   Signed_inRailwayGroupIndexRoute: typeof Signed_inRailwayGroupIndexRoute
   Signed_inRailwayRailwayIndexRoute: typeof Signed_inRailwayRailwayIndexRoute
   Signed_inRailwayStationIndexRoute: typeof Signed_inRailwayStationIndexRoute
@@ -178,6 +198,7 @@ interface Signed_inRouteChildren {
 
 const Signed_inRouteChildren: Signed_inRouteChildren = {
   Signed_inIndexRoute: Signed_inIndexRoute,
+  Signed_inRailwayGroupIdRoute: Signed_inRailwayGroupIdRoute,
   Signed_inRailwayGroupIndexRoute: Signed_inRailwayGroupIndexRoute,
   Signed_inRailwayRailwayIndexRoute: Signed_inRailwayRailwayIndexRoute,
   Signed_inRailwayStationIndexRoute: Signed_inRailwayStationIndexRoute,

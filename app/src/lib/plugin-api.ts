@@ -32,7 +32,7 @@ async function getPluginApiToken(): Promise<string> {
 
 interface PluginApiOptions {
     /** 既定は GET */
-    readonly method?: "GET" | "POST" | "PATCH" | "DELETE";
+    readonly method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
     /** JSON として送るリクエストボディ */
     readonly body?: unknown;
 }

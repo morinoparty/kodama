@@ -1,5 +1,6 @@
-import { useRouter } from "@tanstack/react-router";
+import { Link, useRouter } from "@tanstack/react-router";
 import { createColumnHelper } from "@tanstack/react-table";
+import { ChevronRightIcon } from "lucide-react";
 import { useMemo } from "react";
 import { css } from "styled-system/css";
 import { DataTable } from "@/components/data-table";
@@ -16,6 +17,25 @@ import {
 // 名前は一覧の主役なので少し強く見せる。Editable の preview / input は
 // 書体を継承するので、外側に指定すれば表示と編集で見え方が揃う
 const nameStyle = css({ fontWeight: "medium", color: "fg" });
+
+// 詳細ページへのリンク。グループ名は編集セルなのでリンクにできないため、
+// 行の末尾に専用の列を置いている
+const detailLinkStyle = css({
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "1",
+    textStyle: "sm",
+    color: "colorPalette.fg",
+    borderRadius: "sm",
+    _hover: { textDecoration: "underline" },
+    _focusVisible: {
+        outlineStyle: "solid",
+        outlineWidth: "2px",
+        outlineColor: "colorPalette.focus.ring",
+        outlineOffset: "2px",
+    },
+    "& :where(svg)": { width: "3.5", height: "3.5", flexShrink: "0" },
+});
 
 const columnHelper = createColumnHelper<RailwayGroup>();
 
@@ -110,6 +130,24 @@ export function GroupsTable({ data }: { data: RailwayGroup[] }) {
                             await router.invalidate();
                         }}
                     />
+                ),
+            }),
+            // 駅の並び (= ナンバリング順) は詳細ページで編集する。
+            // 並べ替えの対象にしても意味がないので外しておく
+            columnHelper.display({
+                id: "stations",
+                header: "駅の並び",
+                enableSorting: false,
+                meta: { width: "1%" },
+                cell: (info) => (
+                    <Link
+                        to="/railway/group/$id"
+                        params={{ id: info.row.original.id }}
+                        className={detailLinkStyle}
+                    >
+                        駅の並び
+                        <ChevronRightIcon aria-hidden="true" />
+                    </Link>
                 ),
             }),
         ],
