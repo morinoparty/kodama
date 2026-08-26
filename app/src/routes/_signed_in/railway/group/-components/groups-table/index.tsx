@@ -6,19 +6,22 @@ import { DataTable } from "@/components/data-table";
 import { ColorSwatch } from "../../../-components/color-swatch";
 import { EditableCell } from "../../../-components/editable-cell";
 import type { RailwayGroup } from "../../../-types";
-import { updateGroupName, updateGroupSlug } from "../../-api/get-groups";
+import {
+    updateGroupName,
+    updateGroupNumberingPrefix,
+    updateGroupNumberingStart,
+    updateGroupSlug,
+} from "../../-api/get-groups";
 
 // 名前は一覧の主役なので少し強く見せる。Editable の preview / input は
 // 書体を継承するので、外側に指定すれば表示と編集で見え方が揃う
 const nameStyle = css({ fontWeight: "medium", color: "fg" });
 
-const mutedTextStyle = css({ textStyle: "xs", color: "fg.subtle" });
-
 const columnHelper = createColumnHelper<RailwayGroup>();
 
 /**
  * AdvanceRailway のグループ一覧テーブル。
- * グループ名と slug は表の中でそのまま書き換えられる。
+ * グループ名・slug と、ナンバリングの接頭辞・開始番号は表の中でそのまま書き換えられる。
  */
 export function GroupsTable({ data }: { data: RailwayGroup[] }) {
     const router = useRouter();
@@ -65,18 +68,49 @@ export function GroupsTable({ data }: { data: RailwayGroup[] }) {
             }),
             columnHelper.accessor("numberingPrefix", {
                 header: "ナンバリング接頭辞",
-                cell: (info) => {
-                    const prefix = info.getValue();
-                    return prefix ? (
-                        prefix
-                    ) : (
-                        <span className={mutedTextStyle}>なし</span>
-                    );
-                },
+                cell: (info) => (
+                    // 空にするとナンバリングなしに戻る。API 側も unset に対応している
+                    <EditableCell
+                        value={info.getValue() ?? ""}
+                        label="ナンバリング接頭辞"
+                        mono
+                        allowEmpty
+                        placeholder="なし"
+                        onSave={async (prefix) => {
+                            await updateGroupNumberingPrefix({
+                                data: {
+                                    id: info.row.original.id,
+                                    prefix: prefix === "" ? null : prefix,
+                                },
+                            });
+                            await router.invalidate();
+                        }}
+                    />
+                ),
             }),
             columnHelper.accessor("numberingStart", {
                 header: "開始番号",
-                cell: (info) => info.getValue(),
+                cell: (info) => (
+                    <EditableCell
+                        value={String(info.getValue())}
+                        label="ナンバリング開始番号"
+                        mono
+                        onSave={async (next) => {
+                            // 接頭辞と違い unset が無いので、未設定に戻す口は用意しない。
+                            // 整数以外は送らずここで弾く
+                            const start = Number(next);
+                            if (!Number.isInteger(start)) {
+                                throw new Error(
+                                    "開始番号は整数で入力してください",
+                                );
+                            }
+                            await updateGroupNumberingStart({
+                                data: { id: info.row.original.id, start },
+                            });
+                            await router.invalidate();
+                        }}
+                    />
+                ),
             }),
         ],
         [router],
