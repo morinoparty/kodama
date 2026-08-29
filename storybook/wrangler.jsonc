@@ -14,6 +14,10 @@
     "observability": {
         "enabled": false
     },
+    // routes を書くと workers_dev は既定で false になる
+    // (wrangler の既定は `workers_dev ?? routes.length === 0`)。
+    // カスタムドメインとは別に <name>.<subdomain>.workers.dev でも開けるよう明示する
+    "workers_dev": true,
     // PR ごとの preview は app と同じく `wrangler versions upload` で行う
     "preview_urls": true,
     // 本番の公開ドメイン。Cloudflare 側に custom domain として登録される
