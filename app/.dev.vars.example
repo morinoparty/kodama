@@ -1,0 +1,7 @@
+# `wrangler dev` 用のシークレットのサンプル。`app/.dev.vars` にコピーして使う。
+# ここに実際の値を書かないこと (.dev.vars は gitignore 済み)。
+#
+# MineAuth のサービスアカウント トークン。プラグイン一覧 (MPM) の API で使う。
+# 本番へは Deploy ワークフローが GitHub Secrets の MINEAUTH_SERVICE_TOKEN を
+# `wrangler secret put` で同期している。
+MINEAUTH_SERVICE_TOKEN=

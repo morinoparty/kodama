@@ -2,7 +2,7 @@ import {
     createFileRoute,
     type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { RailwayPage } from "../-components/railway-page";
+import { ListPage } from "@/components/list-page";
 import { getStations } from "./-api/get-stations";
 import { StationsTable } from "./-components/stations-table";
 
@@ -26,16 +26,16 @@ function StationPage() {
     const { stations, groups } = Route.useLoaderData();
 
     return (
-        <RailwayPage title={TITLE} description={DESCRIPTION}>
+        <ListPage title={TITLE} description={DESCRIPTION}>
             <StationsTable data={stations} groups={groups} />
-        </RailwayPage>
+        </ListPage>
     );
 }
 
 function StationErrorPage({ error }: ErrorComponentProps) {
     return (
-        <RailwayPage title={TITLE} description={DESCRIPTION}>
-            <RailwayPage.LoadError resourceLabel="駅情報" error={error} />
-        </RailwayPage>
+        <ListPage title={TITLE} description={DESCRIPTION}>
+            <ListPage.LoadError resourceLabel="駅情報" error={error} />
+        </ListPage>
     );
 }

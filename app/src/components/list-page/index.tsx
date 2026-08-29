@@ -57,13 +57,13 @@ const errorDetailStyle = css({
     wordBreak: "break-all",
 });
 
-export interface RailwayPageProps {
+export interface ListPageProps {
     readonly title: string;
     readonly description: string;
     readonly children: ReactNode;
 }
 
-export interface RailwayPageLoadErrorProps {
+export interface ListPageLoadErrorProps {
     /** 「〜の取得に失敗しました。」の主語 (例: `駅情報`) */
     readonly resourceLabel: string;
     /** loader が投げたエラー。原因を追えるようメッセージを添える */
@@ -71,16 +71,13 @@ export interface RailwayPageLoadErrorProps {
 }
 
 /**
- * 鉄道セクションの各ページに共通する見出しと余白。
+ * 一覧ページに共通する見出しと余白。鉄道・プラグインなど、
+ * 表を 1 つ置くだけのページはこの枠に載せる。
  *
  * 読み込みに失敗したときも見出しはそのまま残したいので、
- * 失敗時の中身は `RailwayPage.LoadError` として同じ枠の中に描く。
+ * 失敗時の中身は `ListPage.LoadError` として同じ枠の中に描く。
  */
-export function RailwayPage({
-    title,
-    description,
-    children,
-}: RailwayPageProps) {
+export function ListPage({ title, description, children }: ListPageProps) {
     return (
         <div className={pageStyle}>
             <div className={headerStyle}>
@@ -92,10 +89,7 @@ export function RailwayPage({
     );
 }
 
-function RailwayPageLoadError({
-    resourceLabel,
-    error,
-}: RailwayPageLoadErrorProps) {
+function ListPageLoadError({ resourceLabel, error }: ListPageLoadErrorProps) {
     return (
         <section className={cardStyle}>
             <p className={errorTextStyle}>
@@ -109,4 +103,4 @@ function RailwayPageLoadError({
     );
 }
 
-RailwayPage.LoadError = RailwayPageLoadError;
+ListPage.LoadError = ListPageLoadError;

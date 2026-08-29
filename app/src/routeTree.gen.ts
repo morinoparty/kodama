@@ -11,6 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as Signed_inRouteImport } from './routes/_signed_in'
 import { Route as Signed_inIndexRouteImport } from './routes/_signed_in/index'
+import { Route as Signed_inPluginsLobbyRouteImport } from './routes/_signed_in/plugins/lobby'
+import { Route as Signed_inPluginsMainRouteImport } from './routes/_signed_in/plugins/main'
+import { Route as Signed_inPluginsResRouteImport } from './routes/_signed_in/plugins/res'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AuthSignInIndexRouteImport } from './routes/auth/sign-in/index'
 import { Route as Signed_inRailwayGroupIndexRouteImport } from './routes/_signed_in/railway/group/index'
@@ -25,6 +28,21 @@ const Signed_inRoute = Signed_inRouteImport.update({
 const Signed_inIndexRoute = Signed_inIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => Signed_inRoute,
+} as any)
+const Signed_inPluginsLobbyRoute = Signed_inPluginsLobbyRouteImport.update({
+  id: '/plugins/lobby',
+  path: '/plugins/lobby',
+  getParentRoute: () => Signed_inRoute,
+} as any)
+const Signed_inPluginsMainRoute = Signed_inPluginsMainRouteImport.update({
+  id: '/plugins/main',
+  path: '/plugins/main',
+  getParentRoute: () => Signed_inRoute,
+} as any)
+const Signed_inPluginsResRoute = Signed_inPluginsResRouteImport.update({
+  id: '/plugins/res',
+  path: '/plugins/res',
   getParentRoute: () => Signed_inRoute,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
@@ -63,6 +81,9 @@ const Signed_inRailwayStationIndexRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof Signed_inIndexRoute
+  '/plugins/lobby': typeof Signed_inPluginsLobbyRoute
+  '/plugins/main': typeof Signed_inPluginsMainRoute
+  '/plugins/res': typeof Signed_inPluginsResRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/auth/sign-in/': typeof AuthSignInIndexRoute
   '/railway/group/$id': typeof Signed_inRailwayGroupIdRoute
@@ -72,6 +93,9 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof Signed_inIndexRoute
+  '/plugins/lobby': typeof Signed_inPluginsLobbyRoute
+  '/plugins/main': typeof Signed_inPluginsMainRoute
+  '/plugins/res': typeof Signed_inPluginsResRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/auth/sign-in': typeof AuthSignInIndexRoute
   '/railway/group/$id': typeof Signed_inRailwayGroupIdRoute
@@ -83,6 +107,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_signed_in': typeof Signed_inRouteWithChildren
   '/_signed_in/': typeof Signed_inIndexRoute
+  '/_signed_in/plugins/lobby': typeof Signed_inPluginsLobbyRoute
+  '/_signed_in/plugins/main': typeof Signed_inPluginsMainRoute
+  '/_signed_in/plugins/res': typeof Signed_inPluginsResRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/auth/sign-in/': typeof AuthSignInIndexRoute
   '/_signed_in/railway/group/$id': typeof Signed_inRailwayGroupIdRoute
@@ -94,6 +121,9 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/plugins/lobby'
+    | '/plugins/main'
+    | '/plugins/res'
     | '/api/auth/$'
     | '/auth/sign-in/'
     | '/railway/group/$id'
@@ -103,6 +133,9 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/plugins/lobby'
+    | '/plugins/main'
+    | '/plugins/res'
     | '/api/auth/$'
     | '/auth/sign-in'
     | '/railway/group/$id'
@@ -113,6 +146,9 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_signed_in'
     | '/_signed_in/'
+    | '/_signed_in/plugins/lobby'
+    | '/_signed_in/plugins/main'
+    | '/_signed_in/plugins/res'
     | '/api/auth/$'
     | '/auth/sign-in/'
     | '/_signed_in/railway/group/$id'
@@ -141,6 +177,27 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof Signed_inIndexRouteImport
+      parentRoute: typeof Signed_inRoute
+    }
+    '/_signed_in/plugins/lobby': {
+      id: '/_signed_in/plugins/lobby'
+      path: '/plugins/lobby'
+      fullPath: '/plugins/lobby'
+      preLoaderRoute: typeof Signed_inPluginsLobbyRouteImport
+      parentRoute: typeof Signed_inRoute
+    }
+    '/_signed_in/plugins/main': {
+      id: '/_signed_in/plugins/main'
+      path: '/plugins/main'
+      fullPath: '/plugins/main'
+      preLoaderRoute: typeof Signed_inPluginsMainRouteImport
+      parentRoute: typeof Signed_inRoute
+    }
+    '/_signed_in/plugins/res': {
+      id: '/_signed_in/plugins/res'
+      path: '/plugins/res'
+      fullPath: '/plugins/res'
+      preLoaderRoute: typeof Signed_inPluginsResRouteImport
       parentRoute: typeof Signed_inRoute
     }
     '/api/auth/$': {
@@ -190,6 +247,9 @@ declare module '@tanstack/react-router' {
 
 interface Signed_inRouteChildren {
   Signed_inIndexRoute: typeof Signed_inIndexRoute
+  Signed_inPluginsLobbyRoute: typeof Signed_inPluginsLobbyRoute
+  Signed_inPluginsMainRoute: typeof Signed_inPluginsMainRoute
+  Signed_inPluginsResRoute: typeof Signed_inPluginsResRoute
   Signed_inRailwayGroupIdRoute: typeof Signed_inRailwayGroupIdRoute
   Signed_inRailwayGroupIndexRoute: typeof Signed_inRailwayGroupIndexRoute
   Signed_inRailwayRailwayIndexRoute: typeof Signed_inRailwayRailwayIndexRoute
@@ -198,6 +258,9 @@ interface Signed_inRouteChildren {
 
 const Signed_inRouteChildren: Signed_inRouteChildren = {
   Signed_inIndexRoute: Signed_inIndexRoute,
+  Signed_inPluginsLobbyRoute: Signed_inPluginsLobbyRoute,
+  Signed_inPluginsMainRoute: Signed_inPluginsMainRoute,
+  Signed_inPluginsResRoute: Signed_inPluginsResRoute,
   Signed_inRailwayGroupIdRoute: Signed_inRailwayGroupIdRoute,
   Signed_inRailwayGroupIndexRoute: Signed_inRailwayGroupIndexRoute,
   Signed_inRailwayRailwayIndexRoute: Signed_inRailwayRailwayIndexRoute,

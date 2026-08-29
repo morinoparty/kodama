@@ -85,6 +85,18 @@ jobs:
           workingDirectory: app
           command: deploy
 
+      # MINEAUTH_SERVICE_TOKEN は wrangler.jsonc に現れない実行時シークレット。
+      # Worker Versions では未deployの最新versionがあると通常のsecret更新が拒否される。
+      # 先にcodeをdeployし、そのversionに対してsecretを別stepで同期する。
+      # (`wrangler secret put` は値を標準入力から受け取るので wrangler-action ではなく直接叩く)
+      - name: Sync MineAuth service token
+        working-directory: app
+        run: printf '%s' "$MINEAUTH_SERVICE_TOKEN" | pnpm exec wrangler secret put MINEAUTH_SERVICE_TOKEN
+        env:
+          MINEAUTH_SERVICE_TOKEN: ${{ secrets.MINEAUTH_SERVICE_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ steps.bws-deploy.outputs.cloudflare_api_token }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+
       # Storybook (worker: kodama-storybook / story.kodama.moripa.nikomaru.dev)
       - name: Deploy storybook
         uses: cloudflare/wrangler-action@v4
