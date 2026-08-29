@@ -19,6 +19,10 @@
             "custom_domain": true
         }
     ],
+    // routes を書くと workers_dev は既定で false になる
+    // (wrangler の既定は `workers_dev ?? routes.length === 0`)。
+    // カスタムドメインとは別に <name>.<subdomain>.workers.dev でも開けるよう明示する
+    "workers_dev": true,
     // PR ごとの preview は `wrangler versions upload` の未昇格バージョン + preview URL で行う
     "preview_urls": true,
     "vars": {
