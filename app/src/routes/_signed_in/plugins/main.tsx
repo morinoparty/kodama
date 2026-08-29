@@ -19,8 +19,10 @@ export const Route = createFileRoute("/_signed_in/plugins/main")({
 });
 
 const TITLE = "メインサーバーのプラグイン";
+// 「管理外」は「MPM の一覧に載っていない」という意味。mpm.json に登録されていない
+// プラグインのほか、登録済みでもメタデータが壊れていると MPM の一覧から外れる
 const DESCRIPTION =
-    "メインサーバー (main) に MPM で導入されているプラグインと、そのバージョンの一覧です。";
+    "メインサーバー (main) に導入されているプラグインの一覧です。MPM の一覧に載っていないものは「管理外」として、最新バージョンを空欄で表示します。";
 
 function MainPluginsPage() {
     const plugins = Route.useLoaderData();

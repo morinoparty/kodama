@@ -19,8 +19,10 @@ export const Route = createFileRoute("/_signed_in/plugins/res")({
 });
 
 const TITLE = "資源サーバーのプラグイン";
+// 「管理外」は「MPM の一覧に載っていない」という意味。mpm.json に登録されていない
+// プラグインのほか、登録済みでもメタデータが壊れていると MPM の一覧から外れる
 const DESCRIPTION =
-    "資源サーバー (res) に MPM で導入されているプラグインと、そのバージョンの一覧です。";
+    "資源サーバー (res) に導入されているプラグインの一覧です。MPM の一覧に載っていないものは「管理外」として、最新バージョンを空欄で表示します。";
 
 function ResPluginsPage() {
     const plugins = Route.useLoaderData();
