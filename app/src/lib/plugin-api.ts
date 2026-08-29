@@ -150,16 +150,20 @@ export async function fetchPluginApi<T>(
  * パスから引けるようにここへまとめておく
  */
 interface PluginHint {
-    /** 403 のときに必要だと案内する権限 */
-    readonly permission: string;
+    /** 403 のときの案内。何が足りないかはトークンの種類によって変わる */
+    readonly forbidden?: string;
     /** 404 のときの案内。導入されていない可能性がある API だけ持つ */
     readonly notInstalled?: string;
 }
 
 const PLUGIN_HINTS: Readonly<Record<string, PluginHint>> = {
-    advancerailway: { permission: "advancerailway.admin" },
+    // ログイン中ユーザーのトークンで叩くので、足りないのはプレイヤーの権限
+    advancerailway: {
+        forbidden: "権限が足りません (advancerailway.admin が必要です)",
+    },
+    // サービストークンで叩くので、403 はプレイヤーではなくトークン側の問題
     mpm: {
-        permission: "mpm.admin",
+        forbidden: "サービストークンにこの API を叩く権限がありません",
         notInstalled: "このサーバーには MPM が導入されていません",
     },
 };
@@ -183,8 +187,8 @@ const describeFailure = async (
     if (response.status === 403 && detail.includes("player_offline")) {
         return "403: Minecraft サーバーにログインしている間だけ操作できます";
     }
-    if (response.status === 403 && hint) {
-        return `403: 権限が足りません (${hint.permission} が必要です)${detail ? ` / ${detail}` : ""}`;
+    if (response.status === 403 && hint?.forbidden) {
+        return `403: ${hint.forbidden}${detail ? ` / ${detail}` : ""}`;
     }
     // 導入されていないプラグインの API はルーティング自体が無く 404 になる
     if (response.status === 404 && hint?.notInstalled) {
