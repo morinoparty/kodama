@@ -101,6 +101,23 @@ const baseUrlOf = (server: ServerName | undefined): string =>
     server === undefined ? env.MAIN_SERVER_URL : `${env.SERVER_URL}${server}`;
 
 /**
+ * プラグイン API が失敗レスポンスを返したことを表すエラー。
+ *
+ * 呼び出し側が「404 だけは握り潰して既定値で続ける」といった判断をできるよう、
+ * 文言だけでなく HTTP のステータスも持たせている
+ * (文言から `404` を読み取るような扱い方をしないため)
+ */
+export class PluginApiError extends Error {
+    constructor(
+        message: string,
+        readonly status: number,
+    ) {
+        super(message);
+        this.name = "PluginApiError";
+    }
+}
+
+/**
  * Minecraft サーバーのプラグイン API へリクエストして JSON を受け取る。
  *
  * トークンの取得・付与とレスポンスの検査をここに閉じ込め、
@@ -135,8 +152,9 @@ export async function fetchPluginApi<T>(
     // 失敗レスポンスのボディをそのまま値として扱うと描画時に落ちて原因が
     // 分かりにくくなる。ここで loader / action の失敗にして呼び出し側へ渡す
     if (!response.ok) {
-        throw new Error(
+        throw new PluginApiError(
             `${resourceLabel}に失敗しました (${await describeFailure(response, path)})`,
+            response.status,
         );
     }
 
