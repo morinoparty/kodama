@@ -2,7 +2,7 @@ import {
     createFileRoute,
     type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { RailwayPage } from "../-components/railway-page";
+import { ListPage } from "@/components/list-page";
 import { getGroupDetail } from "./-api/get-group-detail";
 import { GroupStationsTable } from "./-components/group-stations-table";
 
@@ -36,17 +36,17 @@ function RailwayGroupDetailPage() {
     const { group, stations } = Route.useLoaderData();
 
     return (
-        <RailwayPage title={group.name} description={DESCRIPTION}>
+        <ListPage title={group.name} description={DESCRIPTION}>
             <GroupStationsTable groupId={group.id} stations={stations} />
-        </RailwayPage>
+        </ListPage>
     );
 }
 
 function RailwayGroupDetailErrorPage({ error }: ErrorComponentProps) {
     return (
         // 読み込めていないのでグループ名は出せない。見出しは固定の文言にする
-        <RailwayPage title="鉄道グループ" description={DESCRIPTION}>
-            <RailwayPage.LoadError resourceLabel="グループ情報" error={error} />
-        </RailwayPage>
+        <ListPage title="鉄道グループ" description={DESCRIPTION}>
+            <ListPage.LoadError resourceLabel="グループ情報" error={error} />
+        </ListPage>
     );
 }

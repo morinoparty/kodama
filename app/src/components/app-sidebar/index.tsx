@@ -33,6 +33,14 @@ const NAV_GROUPS = [
         items: [{ title: "ホーム", to: "/" }],
     },
     {
+        title: "プラグイン",
+        items: [
+            { title: "ロビー", to: "/plugins/lobby" },
+            { title: "メイン", to: "/plugins/main" },
+            { title: "資源", to: "/plugins/res" },
+        ],
+    },
+    {
         title: "鉄道",
         items: [
             { title: "グループ", to: "/railway/group" },
