@@ -5,8 +5,16 @@ import {
     type ServerName,
 } from "@/lib/plugin-api";
 import { toPluginRows } from "../-functions/to-plugin-rows";
-import type { ManagedPluginItem, PluginRow } from "../-types";
-import { fetchInstalledPlugins, fetchManagedPlugins } from "./mpm";
+import type {
+    ManagedPluginItem,
+    OutdatedCheckResult,
+    PluginRow,
+} from "../-types";
+import {
+    fetchInstalledPlugins,
+    fetchManagedPlugins,
+    fetchOutdatedPlugins,
+} from "./mpm";
 
 /**
  * MPM の一覧を取得する。MPM が入っていないサーバーでは空として扱う。
@@ -29,10 +37,37 @@ const fetchManagedOrEmpty = async (
 };
 
 /**
+ * 更新チェックの結果を取得する。取れなければ null を返す。
+ *
+ * このチェックはプラグインごとに上流のリポジトリへ問い合わせるので、MPM が
+ * 入っていない (404) ほかに、上流が落ちている (503) だけでも失敗する。
+ * どちらも一覧そのものは MPM の記録値で描けるため、ページを落とさず続ける。
+ * 代わりに、記録値は「更新チェックが取れていない」と分かる形で表示する
+ */
+const fetchOutdatedOrNull = async (
+    server: ServerName,
+): Promise<OutdatedCheckResult | null> => {
+    try {
+        return await fetchOutdatedPlugins(server);
+    } catch (error) {
+        if (error instanceof PluginApiError) {
+            console.error(
+                `更新チェックを取得できませんでした: ${error.message}`,
+            );
+            return null;
+        }
+        throw error;
+    }
+};
+
+/**
  * 指定したサーバーのプラグイン一覧を取得する。
  *
- * 導入済みの一覧 (コア) と MPM の一覧を並行して取り、サーバー側で突き合わせてから返す。
- * クライアントからの往復は 1 回で済む。
+ * 導入済みの一覧 (コア)・MPM の一覧・更新チェックの結果を並行して取り、
+ * サーバー側で突き合わせてから返す。クライアントからの往復は 1 回で済む。
+ *
+ * 更新チェックは全プラグイン分の問い合わせが終わるまで返らないため、
+ * このページの表示はいちばん遅い更新チェックに引きずられる。
  *
  * サーバー名はクライアントから渡ってきて URL の一部になるため、
  * `parseServerName` で既知の名前だけに絞ってから使う。
@@ -42,10 +77,11 @@ export const getPlugins = createServerFn()
         server: parseServerName(input.server),
     }))
     .handler(async ({ data }): Promise<PluginRow[]> => {
-        const [installed, managed] = await Promise.all([
+        const [installed, managed, checked] = await Promise.all([
             fetchInstalledPlugins(data.server),
             fetchManagedOrEmpty(data.server),
+            fetchOutdatedOrNull(data.server),
         ]);
 
-        return toPluginRows(installed, managed);
+        return toPluginRows(installed, managed, checked);
     });
