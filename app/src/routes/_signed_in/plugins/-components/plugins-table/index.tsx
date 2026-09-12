@@ -18,6 +18,15 @@ const outdatedVersionStyle = css({
     color: "fg.muted",
 });
 
+// 更新チェックが取れていないバージョンは、確かめた値と同じ顔で出さない。
+// 理由は title に入れるので、読めることが分かるようカーソルも変える
+const unverifiedVersionStyle = css({
+    fontFamily: "mono",
+    textStyle: "sm",
+    color: "fg.subtle",
+    cursor: "help",
+});
+
 // 値が無いことを表すダッシュ。等幅の桁と揃わないので別に用意する
 const unknownStyle = css({ textStyle: "sm", color: "fg.subtle" });
 
@@ -40,14 +49,26 @@ const FILTERS: readonly DataTableFilter[] = [
  *
  * 「管理外」は厳密には「MPM の一覧に載っていない」という意味。
  * `mpm.json` に登録されていない jar のほかに、登録はされているがメタデータが
- * 壊れているものも MPM の一覧から外れるため、ここに現れうる
+ * 壊れているものも MPM の一覧から外れるため、ここに現れうる。
+ *
+ * 「更新あり」と言い切るのは更新チェックが取れたときだけにする。MPM の記録値は
+ * Fixed 指定 (pin / rollback での固定) を反映しないため、そのまま信じると
+ * ありもしないダウングレードを勧めてしまう
  */
 const statusOf = (plugin: PluginRow): string => {
     if (!plugin.isManaged) return "管理外";
     if (plugin.currentVersion === null) return "未導入";
     if (plugin.isLocked) return "更新停止中";
+    if (plugin.latestCheck === "failed") return "確認できません";
+    if (plugin.latestCheck !== "checked") return "未確認";
     return plugin.isOutdated ? "更新あり" : "最新";
 };
+
+/** 更新チェックが取れていない最新バージョンに添える、その理由 */
+const unverifiedReasonOf = (plugin: PluginRow): string =>
+    plugin.latestCheck === "failed"
+        ? `更新チェックに失敗したため、MPM が最後に記録した値です (${plugin.checkError ?? "理由不明"})`
+        : "更新チェックを取得できなかったため、MPM が最後に記録した値です";
 
 const columnHelper = createColumnHelper<PluginRow>();
 
@@ -94,12 +115,28 @@ export function PluginsTable({ data }: PluginsTableProps) {
                 header: "最新バージョン",
                 meta: { width: "1%" },
                 cell: (info) => {
-                    const version = info.getValue();
+                    const plugin = info.row.original;
                     // 管理外のプラグインは配布元が分からないので最新も分からない
-                    if (version === undefined) {
+                    if (!plugin.isManaged) {
                         return <Unknown label="MPM の管理下にないため不明" />;
                     }
-                    return <span className={versionStyle}>{version}</span>;
+                    const version = info.getValue();
+                    if (version === undefined) {
+                        return <Unknown label="MPM に記録がないため不明" />;
+                    }
+                    if (plugin.latestCheck === "checked") {
+                        return <span className={versionStyle}>{version}</span>;
+                    }
+                    // 確かめられていない値なので、記録値であることを添えて控えめに出す
+                    const reason = unverifiedReasonOf(plugin);
+                    return (
+                        <span className={unverifiedVersionStyle} title={reason}>
+                            {version}
+                            <span className={css({ srOnly: true })}>
+                                {reason}
+                            </span>
+                        </span>
+                    );
                 },
             }),
             // 絞り込みの対象にするため、状態は独立した列として持たせる
@@ -149,6 +186,8 @@ const BADGE_VARIANTS = {
     管理外: "subtle",
     未導入: "subtle",
     更新停止中: "subtle",
+    確認できません: "subtle",
+    未確認: "subtle",
     最新: "outline",
 } as const satisfies Record<string, "solid" | "subtle" | "outline">;
 

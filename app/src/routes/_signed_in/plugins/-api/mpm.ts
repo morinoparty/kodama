@@ -1,5 +1,9 @@
 import { fetchPluginApi, type ServerName } from "@/lib/plugin-api";
-import type { InstalledPluginItem, ManagedPluginItem } from "../-types";
+import type {
+    InstalledPluginItem,
+    ManagedPluginItem,
+    OutdatedCheckResult,
+} from "../-types";
 
 // プラグイン一覧に使う API の呼び出し。
 // サーバー関数はページごとに用意するため、ここは素の関数として置いている
@@ -13,8 +17,9 @@ const SERVICE = { auth: "service" } as const;
  * MPM が管理しているプラグインの一覧を取得する。
  *
  * この API はページングを持たず、常に全件を返す。
- * 現在のバージョンと最新バージョンの両方が含まれるので、
- * 更新の要否だけを返す `/plugins/outdated` は使わない。
+ * ただし返る `latestVersion` / `isOutdated` はメタデータの読み出しでしかなく、
+ * `mpm.json` の Fixed 指定 (pin / rollback での固定) は反映されない。
+ * 更新先として実際に使われるバージョンは `fetchOutdatedPlugins` から取る。
  */
 export const fetchManagedPlugins = (
     server: ServerName,
@@ -37,5 +42,25 @@ export const fetchInstalledPlugins = (
     fetchPluginApi<InstalledPluginItem[]>(
         "/api/v1/commons/server/plugins",
         "導入済みプラグイン一覧",
+        { server, ...SERVICE },
+    );
+
+/**
+ * MPM の更新チェックの結果を取得する。
+ *
+ * 一覧の `latestVersion` と違い、こちらは呼ぶたびに上流のリポジトリへ問い合わせ直す。
+ * そのうえで `mpm.json` の指定を踏まえて更新先を決めるため、Fixed 指定のプラグインは
+ * 固定したバージョン自体が `latestVersion` になる (Sync 指定なら追従先の親に合わせる)。
+ *
+ * プラグインごとに問い合わせるので一部だけ失敗しうる。失敗したものは `errors` に入り、
+ * `outdated` からは抜ける。全件分の問い合わせが終わるまで返らないため、
+ * 一覧の取得より時間がかかる。
+ */
+export const fetchOutdatedPlugins = (
+    server: ServerName,
+): Promise<OutdatedCheckResult> =>
+    fetchPluginApi<OutdatedCheckResult>(
+        "/api/v1/plugins/mpm/plugins/outdated",
+        "MPM の更新チェック",
         { server, ...SERVICE },
     );
