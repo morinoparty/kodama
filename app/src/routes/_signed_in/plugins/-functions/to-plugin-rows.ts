@@ -14,30 +14,60 @@ import type {
  */
 const keyOf = (name: string): string => name.toLowerCase();
 
-/** 行のうち、最新バージョンにまつわる部分 */
-type LatestVersionFields = Pick<
+/** 行のうち、バージョンにまつわる部分 */
+type VersionFields = Pick<
     PluginRow,
-    "latestVersion" | "latestCheck" | "isOutdated" | "checkError"
+    | "currentVersion"
+    | "latestVersion"
+    | "latestCheck"
+    | "isOutdated"
+    | "checkError"
 >;
 
 /**
- * MPM の一覧と更新チェックの結果から、最新バージョンの欄を決める。
+ * MPM の一覧と更新チェックの結果から、管理下プラグインのバージョン欄を決める。
+ *
+ * ## 最新バージョン
  *
  * 一覧の `latestVersion` はメタデータの読み出しでしかなく、`mpm.json` の Fixed 指定
  * (pin / rollback での固定) を反映しない。そのため、記録が古いまま上流が巻き戻ると
  * 「1.7.3 -> 1.6.6」のようなダウングレードを勧めてしまう。
  * 更新チェックが取れたときはそちらを正とし、取れなかったときは記録値を出しつつ
  * 「更新あり」とは言い切らない。
+ *
+ * ## 現在のバージョン
+ *
+ * jar の `plugin.yml` が名乗るバージョンではなく、MPM が記録している方を出す。
+ * この 2 つは同じ導入を指していても表記が違うことが多く
+ * (jar が `1.7.3-b131` / `VersionPlaceholder`、MPM は `1.7.3` / `0.0.30` など)、
+ * 並べても見比べられないため。最新バージョンと同じ土俵の値にして、
+ * 更新の要否を目でも確かめられるようにする。
+ *
+ * jar と MPM の記録が食い違っていないかの確認は、sha256 を照合する
+ * MPM の `/plugins/verify` の担当なのでここでは扱わない。
+ *
+ * @param jarVersion 実際に置かれている jar のバージョン。jar が無ければ null
  */
-const toLatestVersionFields = (
+const toVersionFields = (
     managed: ManagedPluginItem,
     checked: OutdatedCheckResult | null,
-): LatestVersionFields => {
+    jarVersion: string | null,
+): VersionFields => {
     const key = keyOf(managed.name);
     const outdated = checked?.outdated.find((item) => keyOf(item.name) === key);
 
+    // MPM に記録が無い (メタデータを読めない) ときだけ jar の値で埋める。
+    // jar そのものが無い行は「未導入」なので null のままにする
+    const currentVersion =
+        jarVersion === null
+            ? null
+            : (outdated?.currentVersion ??
+              managed.currentVersion ??
+              jarVersion);
+
     if (outdated) {
         return {
+            currentVersion,
             latestVersion: outdated.latestVersion,
             latestCheck: "checked",
             isOutdated: outdated.needsUpdate,
@@ -50,6 +80,7 @@ const toLatestVersionFields = (
 
     if (error) {
         return {
+            currentVersion,
             latestVersion: recorded,
             latestCheck: "failed",
             checkError: error.errorMessage,
@@ -57,7 +88,11 @@ const toLatestVersionFields = (
     }
 
     // チェック自体が取れなかったか、チェックの対象外だったもの
-    return { latestVersion: recorded, latestCheck: "unchecked" };
+    return {
+        currentVersion,
+        latestVersion: recorded,
+        latestCheck: "unchecked",
+    };
 };
 
 /**
@@ -85,6 +120,7 @@ export const toPluginRows = (
 
         if (!match) {
             return {
+                // 管理外は MPM 側に記録が無いので、jar が名乗る値をそのまま出す
                 name: plugin.name,
                 currentVersion: plugin.version,
                 isManaged: false,
@@ -95,10 +131,9 @@ export const toPluginRows = (
         return {
             // 表示名は MPM 側に合わせる。更新操作の宛先と一致する方が分かりやすい
             name: match.name,
-            // バージョンは実際に入っている値を優先する
-            currentVersion: plugin.version || match.currentVersion,
             isManaged: true,
-            ...toLatestVersionFields(match, checked),
+            // 空文字を「jar のバージョンが分かっている」と扱わないよう null に寄せる
+            ...toVersionFields(match, checked, plugin.version || null),
             isLocked: match.isLocked,
             description: match.description ?? plugin.description,
         };
@@ -112,10 +147,9 @@ export const toPluginRows = (
         .map(
             (plugin): PluginRow => ({
                 name: plugin.name,
-                // jar が見つからないので、入っているバージョンは無い
-                currentVersion: null,
                 isManaged: true,
-                ...toLatestVersionFields(plugin, checked),
+                // jar が見つからないので、入っているバージョンは無い
+                ...toVersionFields(plugin, checked, null),
                 isLocked: plugin.isLocked,
                 description: plugin.description,
             }),

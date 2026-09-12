@@ -94,7 +94,12 @@ export interface InstalledPluginItem {
  */
 export interface PluginRow {
     readonly name: string;
-    /** 入っているバージョン。jar が無く MPM にだけ載っている場合は null */
+    /**
+     * 入っているバージョン。jar が無く MPM にだけ載っている場合は null。
+     *
+     * 管理下のものは MPM が記録している値、管理外のものは jar が名乗る値になる。
+     * 最新バージョンと見比べられるよう、管理下は出どころを揃えている
+     */
     readonly currentVersion: string | null;
     /** MPM の一覧に載っているか */
     readonly isManaged: boolean;
