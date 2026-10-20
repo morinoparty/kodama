@@ -1,0 +1,25 @@
+version: 2
+updates:
+  # pnpm workspace (root / app / storybook) は pnpm-lock.yaml 1 つで管理しているので、
+  # ルートを指定すれば全パッケージが対象になる
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      # minor / patch は 1 つの PR にまとめる。major は破壊的変更の確認が要るので個別 PR
+      npm-minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Actions の更新は 1 つの PR にまとめる。個別 PR だと同じワークフローを触る PR 同士が
+  # 競合し、workflow_policy_update_error が連鎖するため
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
