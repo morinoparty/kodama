@@ -73,7 +73,7 @@ const fetchOutdatedOrNull = async (
  * `parseServerName` で既知の名前だけに絞ってから使う。
  */
 export const getPlugins = createServerFn()
-    .inputValidator((input: { server: string }) => ({
+    .validator((input: { server: string }) => ({
         server: parseServerName(input.server),
     }))
     .handler(async ({ data }): Promise<PluginRow[]> => {

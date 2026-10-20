@@ -33,10 +33,10 @@ export const getRailways = createServerFn().handler(
 
 /** 路線の slug を変更する */
 export const updateRailwaySlug = createServerFn({ method: "POST" })
-    .inputValidator((input: { id: string; slug: string }) => input)
+    .validator((input: { id: string; slug: string }) => input)
     .handler(({ data }) => patchRailwaySlug(data.id, data.slug));
 
 /** 路線の所属グループを変更する。null で未所属に戻す */
 export const updateRailwayGroup = createServerFn({ method: "POST" })
-    .inputValidator((input: { id: string; groupId: string | null }) => input)
+    .validator((input: { id: string; groupId: string | null }) => input)
     .handler(({ data }) => patchRailwayGroup(data.id, data.groupId));
