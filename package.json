@@ -19,7 +19,7 @@
         "typecheck": "pnpm -r typecheck"
     },
     "devDependencies": {
-        "@biomejs/biome": "^2.5.9"
+        "@biomejs/biome": "^2.5.15"
     },
     "pnpm": {
         "onlyBuiltDependencies": [

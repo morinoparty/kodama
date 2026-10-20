@@ -23,12 +23,12 @@ export const getStations = createServerFn().handler(async () => {
 
 /** 駅の slug を変更する */
 export const updateStationSlug = createServerFn({ method: "POST" })
-    .inputValidator((input: { id: string; slug: string }) => input)
+    .validator((input: { id: string; slug: string }) => input)
     .handler(({ data }) => patchStationSlug(data.id, data.slug));
 
 /** 駅の名前を変更する */
 export const updateStationName = createServerFn({ method: "POST" })
-    .inputValidator((input: { id: string; name: string }) => input)
+    .validator((input: { id: string; name: string }) => input)
     .handler(({ data }) => patchStationName(data.id, data.name));
 
 /**
@@ -49,7 +49,7 @@ export const updateStationName = createServerFn({ method: "POST" })
  *   (まるごと置換の API なので避けられない)
  */
 export const updateStationGroups = createServerFn({ method: "POST" })
-    .inputValidator((input: { stationId: string; groupIds: string[] }) => input)
+    .validator((input: { stationId: string; groupIds: string[] }) => input)
     .handler(async ({ data }) => {
         // いまの所属はクライアントの表示ではなく API から引き直す。
         // 画面が古いまま送られてきても、実際の状態を基準に差分を取れる
