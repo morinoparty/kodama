@@ -58,4 +58,8 @@ export const normalizeSsrResponse = <T>(response: T): T => response;
 export const replaceSsrResponse = () => {};
 export const stripSsrResponseBody = <T>(response: T): T => response;
 
+// --- サーバー関数のシリアライズ (seroval) 用。Storybook ではサーバー関数を処理しない ---
+export const createRawStreamRPCPlugin = unavailable("createRawStreamRPCPlugin");
+export const defaultSerovalDeserializerPlugins: unknown[] = [];
+
 export default {};

@@ -66,8 +66,11 @@ export interface ListPageProps {
 export interface ListPageLoadErrorProps {
     /** 「〜の取得に失敗しました。」の主語 (例: `駅情報`) */
     readonly resourceLabel: string;
-    /** loader が投げたエラー。原因を追えるようメッセージを添える */
-    readonly error: Error;
+    /**
+     * loader が投げたエラー。原因を追えるようメッセージを添える。
+     * TanStack Router の `ErrorComponentProps` では `unknown` なので、そのまま受け取る
+     */
+    readonly error: unknown;
 }
 
 /**
@@ -90,15 +93,14 @@ export function ListPage({ title, description, children }: ListPageProps) {
 }
 
 function ListPageLoadError({ resourceLabel, error }: ListPageLoadErrorProps) {
+    const message = error instanceof Error ? error.message : undefined;
     return (
         <section className={cardStyle}>
             <p className={errorTextStyle}>
                 {resourceLabel}
                 の取得に失敗しました。時間をおいて再読み込みしてください。
             </p>
-            {error.message ? (
-                <p className={errorDetailStyle}>{error.message}</p>
-            ) : null}
+            {message ? <p className={errorDetailStyle}>{message}</p> : null}
         </section>
     );
 }
