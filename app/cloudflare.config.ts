@@ -18,7 +18,7 @@ export default defineConfig({
             // kodama 用の MineAuth OIDC クライアント。
             // リダイレクト URI は `<origin>/api/auth/callback/MineAuth`
             // (本番: https://kodama.morinoparty.workers.dev/api/auth/callback/MineAuth)
-            CLIENT_ID: bindings.text("01a018fc-3495-755e-9782-eadc5a6038e6"),
+            CLIENT_ID: bindings.text("01a15d04-fd17-7507-b062-e4fa627b695f"),
             // MineAuth (OIDC プロバイダー) のベース URL
             MAIN_SERVER_URL: bindings.text("https://api.morino.party/main"),
             // 各 Minecraft サーバーの API ベース URL
