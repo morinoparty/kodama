@@ -36,8 +36,8 @@
 - HTTP エンドポイントが必要な場合は、ルートの `server.handlers` に `GET` / `POST` などを定義します。
   （例: `app/src/routes/api/auth/$.tsx`）
 - Cloudflare のバインディングや環境変数は `cloudflare:workers` の `env` から参照します。
-  `app/wrangler.jsonc` を変更したら `pnpm run cf-typegen` で `app/worker-configuration.d.ts` を
-  更新してください。
+  `app/cloudflare.config.ts` を変更したら `pnpm run cf-typegen` で `app/.cloudflare/types/index.d.ts` を
+  更新してください (`pnpm run typecheck` でも自動で再生成されます)。
 
 ## Panda CSS
 
@@ -55,8 +55,7 @@
 - Storybook の起動: `pnpm run dev:storybook` (6006 番ポート)
 - Biome によるチェックと自動修正: `pnpm run check`
 - 型チェック (全パッケージ): `pnpm run typecheck`
-- ビルド: `pnpm run build` (app) / `pnpm run build:storybook` (storybook) /
-  `pnpm run build:all` (両方)
+- ビルド: `pnpm run build` (storybook をビルドして app に同梱) / `pnpm run build:storybook` (storybook のみ)
 - ルート定義の再生成: `pnpm run generate-routes`
 - Workers の型定義の再生成: `pnpm run cf-typegen`
 - Panda の再生成: `pnpm run panda:codegen`

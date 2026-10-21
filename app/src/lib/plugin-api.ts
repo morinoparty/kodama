@@ -33,15 +33,15 @@ async function getPluginApiToken(): Promise<string> {
 /**
  * サービスアカウントの Bearer トークンを取得する。
  *
- * `wrangler secret put` で投入する実行時シークレットなので、`wrangler.jsonc` には
- * 現れない。ローカルでは `app/.dev.vars` に置く (`.dev.vars.example` を参照)
+ * Worker secret (cloudflare.config.ts の `bindings.secret()`)。本番へは Deploy ワークフローが
+ * `cf deploy --secrets-file` で投入する。ローカルでは `app/.env` に置く (`.env.example` を参照)
  */
 function getServiceToken(): string {
     const token = env.MINEAUTH_SERVICE_TOKEN;
 
     if (!token) {
         throw new Error(
-            "MINEAUTH_SERVICE_TOKEN が設定されていません。ローカルでは app/.dev.vars に設定してください。",
+            "MINEAUTH_SERVICE_TOKEN が設定されていません。ローカルでは app/.env に設定してください。",
         );
     }
 
@@ -71,7 +71,7 @@ interface PluginApiOptions {
 }
 
 /**
- * 管理対象の Minecraft サーバー。`wrangler.jsonc` の `SERVERS` と同じ顔ぶれで、
+ * 管理対象の Minecraft サーバー。`cloudflare.config.ts` の `SERVERS` と同じ顔ぶれで、
  * 並びは画面に出す順 (ロビー → メイン → 資源)
  */
 export const SERVER_NAMES = ["lobby", "main", "res"] as const;

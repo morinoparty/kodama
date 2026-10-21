@@ -20,8 +20,8 @@ kodama/
 - `app/package.json` — `@kodama/app`
 - `app/panda.config.ts` — Panda CSS の設定 (Chlorophyll の preset を読み込む)
 - `app/vite.config.ts` / `app/postcss.config.cjs` / `app/tsconfig.json` / `app/tsr.config.json`
-- `app/wrangler.jsonc` — Worker `kodama` の設定
-- `app/worker-configuration.d.ts` — `pnpm run cf-typegen` の生成物
+- `app/cloudflare.config.ts` — Worker `kodama` の設定 (cf CLI)
+- `app/.cloudflare/` — `cf build` / `pnpm run cf-typegen` の生成物 (型は `types/index.d.ts`)。gitignore 済み
 - `app/styled-system/` — `panda codegen` の生成物。gitignore 済みで手を入れない
 
 ### `app/src/` 直下
@@ -67,12 +67,13 @@ kodama/
 - `storybook/.storybook/dummy-router.tsx` — TanStack Router に依存する UI を story で描くためのダミー
 - `storybook/.storybook/shims/` — TanStack Start / Workers ランタイム向けのスタブ
 - `storybook/panda.config.ts` — app の設定を流用し、抽出対象と出力先だけ差し替える
-- `storybook/wrangler.jsonc` — ビルド済み `storybook-static/` を配信する Worker `kodama-storybook` の設定
+- ビルド済みの `storybook-static/` は、app の Vite ビルド (`app/vite.config.ts` の `bundleStorybook`) が
+  client アセットの `storybook/` にコピーし、Worker `kodama` の `/storybook/` 配下で配信する。専用の Worker は持たない
 
 ## `.github/workflows/`
 
-- `check.yml` — Biome / 型チェック / ビルド。app と storybook の両方をビルドする。
+- `check.yml` — Biome / 型チェック / ビルド。storybook → app の順にビルドする。
   main ブランチ保護の必須チェック
-- `deploy.yml` — main への push で、app (`kodama`) と storybook (`kodama-storybook`) を
-  Cloudflare Workers へ本番デプロイ
-- `preview.yml` — PR ごとに app と storybook の preview バージョンを作り、URL と QR を PR にコメント
+- `deploy.yml` — main への push で、Storybook をビルドしてから app (`kodama`、Storybook を同梱) を
+  `cf build` → `cf deploy --dry-run` → `cf deploy` で Cloudflare Workers へ本番デプロイ
+- `preview.yml` — PR ごとに `cf previews deploy` で app の preview を作り、app と `/storybook/` の URL と QR を PR にコメント

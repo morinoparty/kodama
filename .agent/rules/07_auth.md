@@ -23,8 +23,9 @@
 
 ## 環境変数・シークレット
 
-- `CLIENT_ID` / `MAIN_SERVER_URL` / `SERVER_URL` / `SERVERS` は `app/wrangler.jsonc` の `vars` に定義します。
-- `AUTH_SECRET` は Cloudflare Secrets Store のバインディング (`shared_AUTH_SECRET`) から供給されます。
-  他の env と違い非同期の `.get()` で読み出す必要があります。
+- `CLIENT_ID` / `MAIN_SERVER_URL` / `SERVER_URL` / `SERVERS` は `app/cloudflare.config.ts` の `env` に `bindings.text()` で定義します。
+- `AUTH_SECRET` と `MINEAUTH_SERVICE_TOKEN` は Worker secret (`bindings.secret()`) で、文字列として読み出せます。
+  本番へは GitHub secrets から `deploy.yml` が `cf deploy --secrets-file` で渡し、ローカルでは `app/.env` から読みます。
+  PR preview には本番の secret が引き継がれないため、Worker `kodama` の Previews Base secret に人が一度だけ登録します (README のデプロイ節を参照)。
 - リダイレクト URI は `<origin>/api/auth/callback/MineAuth` です。
   新しい origin を使う場合は MineAuth 側にも登録が必要です。
