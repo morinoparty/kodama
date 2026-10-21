@@ -18,7 +18,7 @@ pnpm workspace の 2 パッケージ構成です。
 ## 主な技術スタック
 
 - **Framework**: TanStack Start (React 19 + TanStack Router のフルスタックフレームワーク)
-- **Runtime**: Cloudflare Workers (`@cloudflare/vite-plugin` + Wrangler)
+- **Runtime**: Cloudflare Workers (`@cloudflare/vite-plugin` + `cf` CLI)
 - **Language**: TypeScript
 - **Package Manager**: pnpm (workspace)
 - **CSS**: Panda CSS + Chlorophyll (`@morinoparty/chlorophyll-react`)
@@ -33,6 +33,6 @@ Chlorophyll は GitHub Packages で配布されているため、インストー
 
 ## 公開先
 
-- 本番: <https://kodama.moripa.nikomaru.dev> (Worker 名 `kodama`)
-- Storybook: <https://story.kodama.moripa.nikomaru.dev> (Worker 名 `kodama-storybook`)
-- プレビュー: PR ごとに `wrangler versions upload` で発行される preview URL
+- 本番: <https://kodama.morinoparty.workers.dev> (Worker 名 `kodama`)
+- Storybook: <https://kodama.morinoparty.workers.dev/storybook/> (Worker `kodama` の静的アセットとして配信)
+- プレビュー: PR ごとに `cf previews deploy` で発行される preview URL

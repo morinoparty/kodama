@@ -6,7 +6,7 @@ addons.setConfig({
     theme: create({
         base: "light",
         brandTitle: "Kodama",
-        brandUrl: "https://kodama.moripa.nikomaru.dev",
+        brandUrl: "https://kodama.morinoparty.workers.dev",
         brandTarget: "_blank",
     }),
 });

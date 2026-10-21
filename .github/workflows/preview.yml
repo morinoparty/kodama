@@ -34,6 +34,8 @@ jobs:
     name: Deploy Preview
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      CF_SEND_TELEMETRY: "false"
     outputs:
       app_deployment_url: ${{ steps.resolve-preview-urls.outputs.app_deployment_url }}
       storybook_deployment_url: ${{ steps.resolve-preview-urls.outputs.storybook_deployment_url }}
@@ -56,7 +58,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 26
+          node-version-file: .node-version
           cache: pnpm
           cache-dependency-path: ./pnpm-lock.yaml
 
@@ -79,92 +81,48 @@ jobs:
       - name: Set deployment metadata
         run: echo "VITE_DEPLOYED_AT=$(date -u +%Y-%m-%dT%H:%M:%S.000Z)" >> "$GITHUB_ENV"
 
-      # app と storybook をまとめてビルドする。storybook worker は storybook-static を
-      # 静的アセットとして配信するため、アップロード前にビルドしておく必要がある
-      - name: Build
-        run: pnpm run build:all
+      # app は cf previews deploy がプレビュー用にビルドし、その Vite ビルドが
+      # storybook-static を client アセットの /storybook/ に同梱する。
+      # そのため cf previews deploy の前に Storybook をビルドしておく必要がある
+      - name: Build storybook static files
+        run: pnpm run build:storybook
 
-      # デプロイトークンは BSM morinoparty プロジェクトの shared/CLOUDFLARE_API_TOKEN から取得
-      # (Secrets Store バインディング付きデプロイには Secrets Store Edit 権限が必要なため)
-      - name: Get deploy token from Bitwarden Secrets Manager
-        uses: bitwarden/sm-action@v3.0.1
-        with:
-          access_token: ${{ secrets.NIKOMARU_BITWARDEN_SECRET_MANAGER_ACCESS_TOKEN }}
-          secrets: |
-            d1a5c5d9-41cc-48f0-9035-b49901583491 > CLOUDFLARE_API_TOKEN
-
-      # sm-action は env にしか出さないため、wrangler-action の with: から参照できるよう output 化
-      - name: Expose deploy token as step output
-        id: bws-deploy
-        run: echo "cloudflare_api_token=$CLOUDFLARE_API_TOKEN" >> "$GITHUB_OUTPUT"
-
-      # 片方のデプロイが落ちても、もう片方の URL は PR に出したいので
-      # ここでジョブを止めず、後段の URL 解決でまとめて判定する
+      # cf previews deploy は結果を JSON で標準出力に出す (preview 名は PR のブランチ名)
+      # preview は本番の secret を引き継がず、cf previews deploy には --secrets-file も無い。
+      # AUTH_SECRET / MINEAUTH_SERVICE_TOKEN は、Worker kodama の Previews Base secret に
+      # 人がダッシュボードで一度だけ登録しておく (登録後に作られた preview にだけ入る。README 参照)
       - name: Deploy app preview
         id: deploy-app-preview
-        continue-on-error: true
-        uses: cloudflare/wrangler-action@v4
-        with:
-          apiToken: ${{ steps.bws-deploy.outputs.cloudflare_api_token }}
-          accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          workingDirectory: app
-          # 本番 worker (kodama) の未昇格バージョンとしてアップロードし、preview URL を得る
-          command: versions upload --message "Deployed app by GitHub Actions branch ${{ github.ref_name }}"
+        working-directory: app
+        run: pnpm exec cf previews deploy > "$RUNNER_TEMP/app-preview.json"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
-      # kodama-storybook worker がまだ一度も deploy されていないと
-      # `versions upload` は失敗する。その場合もジョブは続行させる
-      - name: Deploy storybook preview
-        id: deploy-storybook-preview
-        continue-on-error: true
-        uses: cloudflare/wrangler-action@v4
-        with:
-          apiToken: ${{ steps.bws-deploy.outputs.cloudflare_api_token }}
-          accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          workingDirectory: storybook
-          # 本番 worker (kodama-storybook) の未昇格バージョンとしてアップロードし、preview URL を得る
-          command: versions upload --message "Deployed storybook by GitHub Actions branch ${{ github.ref_name }}"
-
-      # wrangler-action の deployment-url output が空になることがあるため、
-      # そのときは wrangler のログから URL を拾う。app / storybook の両方に同じ処理を適用する
+      # cf previews deploy の JSON (preview_urls / deployment_urls) から URL を取り出す。
+      # JSON として読めない場合は出力中の最初の https URL を拾う。
+      # Storybook は同じ Worker の /storybook/ 配下にあるので、app の URL から組み立てる
       - name: Resolve preview URLs
         id: resolve-preview-urls
-        env:
-          APP_DEPLOYMENT_URL: ${{ steps.deploy-app-preview.outputs.deployment-url }}
-          APP_COMMAND_OUTPUT: ${{ steps.deploy-app-preview.outputs.command-output }}
-          APP_COMMAND_STDERR: ${{ steps.deploy-app-preview.outputs.command-stderr }}
-          STORYBOOK_DEPLOYMENT_URL: ${{ steps.deploy-storybook-preview.outputs.deployment-url }}
-          STORYBOOK_COMMAND_OUTPUT: ${{ steps.deploy-storybook-preview.outputs.command-output }}
-          STORYBOOK_COMMAND_STDERR: ${{ steps.deploy-storybook-preview.outputs.command-stderr }}
         run: |
-          resolve_url() {
-            name="$1"
-            url="$2"
-            output="$3"
-            stderr="$4"
+          file="$RUNNER_TEMP/app-preview.json"
+          url=""
 
+          if [ -s "$file" ]; then
+            url=$(jq -r '[(.preview_urls, .deployment_urls) | .. | strings | select(startswith("https://"))] | first // empty' "$file" 2>/dev/null || true)
             if [ -z "$url" ]; then
-              url=$(printf '%s\n%s\n' "$output" "$stderr" \
-                | grep -Eo 'https://[^[:space:]]+' | head -n 1 || true)
+              url=$(grep -Eo 'https://[^[:space:]"]+' "$file" | head -n 1 || true)
             fi
+          fi
 
-            if [ -z "$url" ]; then
-              echo "::warning::failed to resolve the $name preview URL"
-              return 1
-            fi
-
-            echo "${name}_deployment_url=$url" >> "$GITHUB_OUTPUT"
-          }
-
-          # 片方だけ落ちたときは警告にとどめ、取れた方の URL を PR に出す。
-          # 両方取れなかったときだけジョブを失敗させる
-          resolved=0
-          resolve_url app "$APP_DEPLOYMENT_URL" "$APP_COMMAND_OUTPUT" "$APP_COMMAND_STDERR" && resolved=1
-          resolve_url storybook "$STORYBOOK_DEPLOYMENT_URL" "$STORYBOOK_COMMAND_OUTPUT" "$STORYBOOK_COMMAND_STDERR" && resolved=1
-
-          if [ "$resolved" -eq 0 ]; then
-            echo "Failed to resolve any preview URL from wrangler-action outputs."
+          if [ -z "$url" ]; then
+            echo "Failed to resolve the preview URL from cf previews deploy output."
             exit 1
           fi
+
+          url="${url%/}"
+          echo "app_deployment_url=$url" >> "$GITHUB_OUTPUT"
+          echo "storybook_deployment_url=$url/storybook/" >> "$GITHUB_OUTPUT"
 
   comment:
     name: Comment Preview URL

@@ -30,7 +30,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 26
+          node-version-file: .node-version
           cache: pnpm
           cache-dependency-path: ./pnpm-lock.yaml
 
@@ -58,9 +58,11 @@ jobs:
       - name: Typecheck
         run: pnpm run typecheck
 
-      # app と storybook はビルドの失敗箇所が分かるようステップを分けている
-      - name: Build app
-        run: pnpm run build
-
+      # app と storybook はビルドの失敗箇所が分かるようステップを分けている。
+      # app のビルドは storybook-static を client アセットの /storybook/ に同梱するため
+      # (CI では無いと失敗する)、storybook を先にビルドする
       - name: Build storybook
         run: pnpm run build:storybook
+
+      - name: Build app
+        run: pnpm --filter @kodama/app build

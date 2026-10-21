@@ -24,7 +24,7 @@
 2. 実装する
 
 3. `pnpm run check` と `pnpm run typecheck` を通す。
-   ビルド設定や依存に手を入れたときは `pnpm run build:all` も通す。
+   ビルド設定や依存に手を入れたときは `pnpm run build` (Storybook も含めてビルドする) も通す。
 
 4. 変更をすべてステージングしてコミットする
 

@@ -20,7 +20,7 @@
         "lib": ["ES2022", "DOM", "DOM.Iterable"],
         // app のソースを取り込むため、cloudflare:workers などの
         // Workers ランタイムの型宣言も app 側から読む
-        "types": ["../app/worker-configuration.d.ts", "vite/client", "node"],
+        "types": ["../app/.cloudflare/types/index.d.ts", "vite/client", "node"],
 
         /* Bundler mode */
         "moduleResolution": "bundler",

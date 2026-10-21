@@ -53,7 +53,8 @@ const NAV_GROUPS = [
 // フッターに置く参考リンク。運営メンバーがすぐ辿れるようにしておく
 const RESOURCES: readonly ExternalNavItem[] = [
     { title: "GitHub", url: "https://github.com/morinoparty/kodama" },
-    { title: "Storybook", url: "https://story.kodama.moripa.nikomaru.dev" },
+    // Storybook は同じ Worker の静的アセットとして /storybook/ 配下で配信している
+    { title: "Storybook", url: "/storybook/", opensInNewTab: true },
 ];
 
 // デプロイ時刻はビルド時に環境変数から埋め込む。未設定なら表示しない

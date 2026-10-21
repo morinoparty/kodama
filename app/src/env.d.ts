@@ -1,8 +1,7 @@
-// `wrangler secret put` で投入する実行時シークレットの型。
+// 実行時シークレットの型。
 //
-// wrangler.jsonc に現れないシークレットは `pnpm run cf-typegen` の生成物
-// (worker-configuration.d.ts) に載らないため、ここで Env に足しておく。
-// 生成物側が同じ宣言を出しても interface のマージで矛盾しないよう、
+// cloudflare.config.ts の `bindings.secret()` から `pnpm run cf-typegen` の生成物
+// (.cloudflare/types/index.d.ts) にも同じ宣言が出る。interface のマージで矛盾しないよう、
 // 型は optional にせず string のままにすること。
 
 declare namespace Cloudflare {
@@ -11,8 +10,8 @@ declare namespace Cloudflare {
          * MineAuth のサービスアカウント トークン。
          * ログイン中のプレイヤーに紐づかない管理系 API (MPM など) で使う。
          *
-         * 本番へは Deploy ワークフローが `wrangler secret put` で同期する。
-         * ローカルは app/.dev.vars に置く (.dev.vars.example を参照)
+         * 本番へは Deploy ワークフローが `cf deploy --secrets-file` で投入する。
+         * ローカルは app/.env に置く (.env.example を参照)
          */
         MINEAUTH_SERVICE_TOKEN: string;
     }
