@@ -51,16 +51,12 @@ jobs:
           sha="${{ github.event.pull_request.head.sha || github.sha }}"
           echo "commit_sha=${sha:0:7}" >> "$GITHUB_OUTPUT"
 
-      - uses: pnpm/action-setup@v6
-        name: Install pnpm
+      # pnpm (package.json の packageManager) と Node (.node-version) をまとめて入れる。
+      # pnpm/action-setup の self-installer (npm 経由) を使わないので速い
+      - uses: pnpm/setup@v3
         with:
-          run_install: false
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .node-version
-          cache: pnpm
-          cache-dependency-path: ./pnpm-lock.yaml
+          cache: true      # pnpm store を lockfile ごとにキャッシュ
+          install: false   # GitHub Packages の認証など、install 前の手順を挟むため
 
       # private パッケージ (@morinoparty/chlorophyll-react) 取得用の GitHub Packages 認証。
       # レジストリ指定はリポジトリの .npmrc にあるので、トークン行だけを足す
@@ -133,15 +129,13 @@ jobs:
     steps:
       # QR の生成には Node の qrcode CLI を pnpm dlx で使う。
       # apt-get はランナーによって数分待たされることがあるため頼らない
-      - uses: pnpm/action-setup@v6
-        name: Install pnpm
+      # checkout しないので package.json / .node-version が無い。
+      # pnpm と Node のバージョンを明示し、依存の install もキャッシュもしない
+      - uses: pnpm/setup@v3
         with:
-          version: 10
-          run_install: false
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 26
+          version: 12.14.0
+          runtime: node@26
+          install: false
 
       # GitHub の Markdown は data: URI の画像を表示しないため、QR は R2 へ置いて参照する。
       - name: Render and upload QR codes
