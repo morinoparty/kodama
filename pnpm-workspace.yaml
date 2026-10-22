@@ -14,3 +14,4 @@ minimumReleaseAgeExclude:
   - miniflare@5.20261019.1-beta
   - wrangler@4.151.3
   - cf@1.0.0-beta.20
+  - '@morinoparty/chlorophyll-react@0.4.11'

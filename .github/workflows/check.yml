@@ -23,16 +23,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v6
-        name: Install pnpm
+      # pnpm (package.json の packageManager) と Node (.node-version) をまとめて入れる。
+      # pnpm/action-setup の self-installer (npm 経由) を使わないので速い
+      - uses: pnpm/setup@v3
         with:
-          run_install: false
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .node-version
-          cache: pnpm
-          cache-dependency-path: ./pnpm-lock.yaml
+          cache: true      # pnpm store を lockfile ごとにキャッシュ
+          install: false   # GitHub Packages の認証など、install 前の手順を挟むため
 
       # private パッケージ (@morinoparty/chlorophyll-react) 取得用の GitHub Packages 認証。
       # レジストリ指定はリポジトリの .npmrc にあるので、トークン行だけを足す
