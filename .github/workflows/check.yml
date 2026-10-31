@@ -8,8 +8,6 @@ on:
 
 permissions:
   contents: read
-  # @morinoparty/chlorophyll-react を GitHub Packages から取得するために必要
-  packages: read
 
 concurrency:
   group: check-${{ github.event.pull_request.number || github.ref }}
@@ -28,14 +26,7 @@ jobs:
       - uses: pnpm/setup@v3
         with:
           cache: true      # pnpm store を lockfile ごとにキャッシュ
-          install: false   # GitHub Packages の認証など、install 前の手順を挟むため
-
-      # private パッケージ (@morinoparty/chlorophyll-react) 取得用の GitHub Packages 認証。
-      # レジストリ指定はリポジトリの .npmrc にあるので、トークン行だけを足す
-      - name: Setup npm auth for GitHub Packages
-        run: echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> .npmrc
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          install: false   # --frozen-lockfile を付けて下の Install ステップで入れる
 
       - name: Install
         run: pnpm install --frozen-lockfile
