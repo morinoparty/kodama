@@ -28,8 +28,7 @@ pnpm workspace の 2 パッケージ構成です。
 - **Linter & Formatter**: Biome
 - **CI/CD**: GitHub Actions (Check / Deploy / Preview)
 
-Chlorophyll は GitHub Packages で配布されているため、インストールにはリポジトリルートの
-`.npmrc` のレジストリ指定と、GitHub のトークンが必要です。
+Chlorophyll は npmjs で公開されているため、インストールにトークンなどの追加設定は不要です。
 
 ## 公開先
 
