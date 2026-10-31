@@ -19,18 +19,6 @@ Biome の設定と、各パッケージへ委譲するスクリプトはリポ�
 
 ## 🚀 開発を始める
 
-### GitHub Packages の認証
-
-UI ライブラリの `@morinoparty/chlorophyll-react` は GitHub Packages で配布されています。
-リポジトリルートの `.npmrc` にレジストリの指定が入っているので、
-`read:packages` 権限を持つ GitHub のトークンを `~/.npmrc` に置いてください。
-
-```
-//npm.pkg.github.com/:_authToken=<あなたのトークン>
-```
-
-トークンはリポジトリ内のファイルには絶対に書かないでください。
-
 ### 依存関係のインストール
 
 ```bash
