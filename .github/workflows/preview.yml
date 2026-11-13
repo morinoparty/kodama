@@ -13,17 +13,15 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # R2 は S3 互換 API なので aws-cli をそのまま使う。
-  AWS_EC2_METADATA_DISABLED: true
-  AWS_REGION: auto
-  AWS_CLI_FILE_ENCODING: UTF-8
-  AWS_DEFAULT_S3_SIGNATURE_VERSION: s3v4
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  S3_UPLOAD_BUCKET: ${{ secrets.S3_UPLOAD_BUCKET }}
-  S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}
-  # アップロード先バケットが公開されているドメイン。
-  PREVIEW_BASE_URL: https://moripa-ci.nikomaru.dev/kodama
+  # R2 (S3 互換 API) への接続情報。バケット・エンドポイント・認証情報・公開 URL は
+  # すべて MORINOPARTY_CI_* の organization secret からまとめて取る (古い secret と混ぜない)
+  AWS_ACCESS_KEY_ID: ${{ secrets.MORINOPARTY_CI_AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.MORINOPARTY_CI_AWS_SECRET_ACCESS_KEY }}
+  AWS_REGION: ${{ secrets.MORINOPARTY_CI_AWS_REGION }}
+  S3_UPLOAD_BUCKET: ${{ secrets.MORINOPARTY_CI_S3_UPLOAD_BUCKET }}
+  S3_ENDPOINT: ${{ secrets.MORINOPARTY_CI_S3_ENDPOINT }}
+  # アップロード先バケットが公開されているドメイン (末尾スラッシュなし)。
+  S3_PUBLIC_URL: ${{ secrets.MORINOPARTY_CI_S3_PUBLIC_URL }}
   # S3 とプレビュー URL で共通利用するプロジェクトのパスプレフィックス。
   PROJECT_PATH: kodama
 
@@ -128,6 +126,10 @@ jobs:
           runtime: node@26
           install: false
 
+      # rclone の最新リリースを入れる (apt の 1.60 は R2 への転送で NotImplemented が多発する)。
+      # 取得したバイナリは actions のキャッシュに保存され、アクション自体の更新は Dependabot が行う
+      - uses: AnimMouse/setup-rclone@26ef2133e09fd383329a1d4c1fbe6a71db1976c9 # v1.12.0
+
       # GitHub の Markdown は data: URI の画像を表示しないため、QR は R2 へ置いて参照する。
       - name: Render and upload QR codes
         id: qr
@@ -135,38 +137,62 @@ jobs:
           COMMIT_SHORT_SHA: ${{ needs.deploy-preview.outputs.commit_sha }}
           APP_PREVIEW_URL: ${{ needs.deploy-preview.outputs.app_deployment_url }}
           STORYBOOK_PREVIEW_URL: ${{ needs.deploy-preview.outputs.storybook_deployment_url }}
+          RCLONE_CONFIG_S3_TYPE: s3
+          RCLONE_CONFIG_S3_PROVIDER: Cloudflare
+          RCLONE_CONFIG_S3_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
+          RCLONE_CONFIG_S3_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          RCLONE_CONFIG_S3_REGION: ${{ env.AWS_REGION }}
+          RCLONE_CONFIG_S3_ENDPOINT: ${{ env.S3_ENDPOINT }}
+          RCLONE_CONFIG_S3_NO_CHECK_BUCKET: "true"
         run: |
           # QR は補助情報なので、生成や配置に失敗してもコメント投稿までは止めない。
+          # secret が空のまま進むと、誤ったキーにアップロードしたり PR コメントの URL が壊れたりするため、
+          # その場合は QR を置かずにコメントだけ投稿する
+          for name in AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION S3_ENDPOINT S3_UPLOAD_BUCKET S3_PUBLIC_URL; do
+            if [ -z "${!name}" ]; then
+              echo "::warning::$name is empty (check the MORINOPARTY_CI_* organization secrets); skipping QR upload"
+              exit 0
+            fi
+          done
+
           # URL が - で始まっても引数として解釈されないよう -- で区切る。
-          # アップロード先は行ごとに分ける (qr/app.png と qr/storybook.png)。
-          upload_qr() {
+          # 生成した QR は qr/app.png と qr/storybook.png にまとめ、最後に 1 回で送る
+          mkdir -p qr
+          render_qr() {
             name="$1"
             url="$2"
             [ -n "$url" ] || return 0
 
-            if ! pnpm dlx qrcode -o "$name.png" -t png -s 6 -m 2 -- "$url"; then
+            if ! pnpm dlx qrcode -o "qr/$name.png" -t png -s 6 -m 2 -- "$url"; then
               echo "::warning::failed to render the $name QR code"
+              rm -f "qr/$name.png"
               return 0
             fi
-            if [ ! -s "$name.png" ]; then
+            if [ ! -s "qr/$name.png" ]; then
               echo "::warning::the rendered $name QR code is empty"
-              return 0
+              rm -f "qr/$name.png"
             fi
-
-            if ! aws s3 cp "$name.png" \
-              "s3://${S3_UPLOAD_BUCKET}/${PROJECT_PATH}/${COMMIT_SHORT_SHA}/qr/$name.png" \
-              --endpoint-url "${S3_ENDPOINT}" \
-              --content-type image/png \
-              --only-show-errors; then
-              echo "::warning::failed to upload the $name QR code"
-              return 0
-            fi
-
-            echo "${name}_qr_url=${PREVIEW_BASE_URL}/${COMMIT_SHORT_SHA}/qr/$name.png" >> "$GITHUB_OUTPUT"
           }
 
-          upload_qr app "$APP_PREVIEW_URL"
-          upload_qr storybook "$STORYBOOK_PREVIEW_URL"
+          render_qr app "$APP_PREVIEW_URL"
+          render_qr storybook "$STORYBOOK_PREVIEW_URL"
+
+          if [ -z "$(ls -A qr)" ]; then
+            echo "No QR codes to upload"
+            exit 0
+          fi
+
+          prefix="${PROJECT_PATH}/${COMMIT_SHORT_SHA}/qr"
+          if ! rclone copy ./qr "s3:${S3_UPLOAD_BUCKET}/${prefix}" \
+            --transfers=32 --checkers=32 --stats=5s --stats-one-line -v; then
+            echo "::warning::failed to upload the QR codes"
+            exit 0
+          fi
+
+          for file in qr/*.png; do
+            name="$(basename "$file" .png)"
+            echo "${name}_qr_url=${S3_PUBLIC_URL}/${prefix}/${name}.png" >> "$GITHUB_OUTPUT"
+          done
 
       - name: Create comment file
         env:
