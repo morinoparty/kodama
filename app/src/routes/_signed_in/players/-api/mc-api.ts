@@ -92,12 +92,17 @@ async function requestMcApi<T>(
  * ボディの `name` は送らない。mc-api はこの値を信用して名前のインデックスに書くため、
  * 運営が手入力した名前で上書きしないよう、名前は上流 (Mojang) から取得させる。
  *
+ * ボディは省略できる仕様だが、Content-Type なしで送ると本番の mc-api は
+ * 415 (Unsupported Media Type) を返した。そのため空のオブジェクト `{}` を
+ * `Content-Type: application/json` 付きで送る (`name` を省略したのと同じ意味になる)
+ *
  * @param uuid 正規化済みの UUID (uuidSchema を通したもの)。URL のパスに埋め込む
  */
 export const putPlayer = (uuid: string): Promise<McApiPutPlayerResponse> =>
     requestMcApi<McApiPutPlayerResponse>(
         `/v1/players/${encodeURIComponent(uuid)}`,
         "PUT",
+        {},
     );
 
 /** まとめて登録する (`POST /v1/players/batch`、最大 100 件) */
