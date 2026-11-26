@@ -42,6 +42,6 @@ export interface RegisterResult {
     readonly status: RegisterStatus;
     /** 一括登録の応答には名前が含まれないため、その場合は null */
     readonly name: string | null;
-    /** `error` のときの原因 */
+    /** `error` / `not_found` のときの mc-api のエラー文 */
     readonly message?: string;
 }

@@ -31,9 +31,15 @@ export const registerPlayer = createServerFn({ method: "POST" })
                 name: result.name,
             };
         } catch (error) {
-            // PUT の 404 は「Mojang に存在しない UUID なので登録しなかった」
+            // PUT の 404 は「Mojang に存在しない UUID なので登録しなかった」。
+            // MC_API_URL の誤りでも 404 になりうるので、mc-api のエラー文も残して見分けられるようにする
             if (error instanceof McApiError && error.status === 404) {
-                return { uuid: data.uuid, status: "not_found", name: null };
+                return {
+                    uuid: data.uuid,
+                    status: "not_found",
+                    name: null,
+                    message: error.message,
+                };
             }
             return {
                 uuid: data.uuid,
