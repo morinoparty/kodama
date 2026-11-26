@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as Signed_inRouteImport } from './routes/_signed_in'
 import { Route as Signed_inIndexRouteImport } from './routes/_signed_in/index'
+import { Route as Signed_inPlayersIndexRouteImport } from './routes/_signed_in/players/index'
 import { Route as Signed_inPluginsLobbyRouteImport } from './routes/_signed_in/plugins/lobby'
 import { Route as Signed_inPluginsMainRouteImport } from './routes/_signed_in/plugins/main'
 import { Route as Signed_inPluginsResRouteImport } from './routes/_signed_in/plugins/res'
@@ -28,6 +29,11 @@ const Signed_inRoute = Signed_inRouteImport.update({
 const Signed_inIndexRoute = Signed_inIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => Signed_inRoute,
+} as any)
+const Signed_inPlayersIndexRoute = Signed_inPlayersIndexRouteImport.update({
+  id: '/players/',
+  path: '/players/',
   getParentRoute: () => Signed_inRoute,
 } as any)
 const Signed_inPluginsLobbyRoute = Signed_inPluginsLobbyRouteImport.update({
@@ -85,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/plugins/main': typeof Signed_inPluginsMainRoute
   '/plugins/res': typeof Signed_inPluginsResRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/players/': typeof Signed_inPlayersIndexRoute
   '/auth/sign-in/': typeof AuthSignInIndexRoute
   '/railway/group/$id': typeof Signed_inRailwayGroupIdRoute
   '/railway/group/': typeof Signed_inRailwayGroupIndexRoute
@@ -97,6 +104,7 @@ export interface FileRoutesByTo {
   '/plugins/main': typeof Signed_inPluginsMainRoute
   '/plugins/res': typeof Signed_inPluginsResRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/players': typeof Signed_inPlayersIndexRoute
   '/auth/sign-in': typeof AuthSignInIndexRoute
   '/railway/group/$id': typeof Signed_inRailwayGroupIdRoute
   '/railway/group': typeof Signed_inRailwayGroupIndexRoute
@@ -111,6 +119,7 @@ export interface FileRoutesById {
   '/_signed_in/plugins/main': typeof Signed_inPluginsMainRoute
   '/_signed_in/plugins/res': typeof Signed_inPluginsResRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/_signed_in/players/': typeof Signed_inPlayersIndexRoute
   '/auth/sign-in/': typeof AuthSignInIndexRoute
   '/_signed_in/railway/group/$id': typeof Signed_inRailwayGroupIdRoute
   '/_signed_in/railway/group/': typeof Signed_inRailwayGroupIndexRoute
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
     | '/plugins/main'
     | '/plugins/res'
     | '/api/auth/$'
+    | '/players/'
     | '/auth/sign-in/'
     | '/railway/group/$id'
     | '/railway/group/'
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
     | '/plugins/main'
     | '/plugins/res'
     | '/api/auth/$'
+    | '/players'
     | '/auth/sign-in'
     | '/railway/group/$id'
     | '/railway/group'
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/_signed_in/plugins/main'
     | '/_signed_in/plugins/res'
     | '/api/auth/$'
+    | '/_signed_in/players/'
     | '/auth/sign-in/'
     | '/_signed_in/railway/group/$id'
     | '/_signed_in/railway/group/'
@@ -177,6 +189,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof Signed_inIndexRouteImport
+      parentRoute: typeof Signed_inRoute
+    }
+    '/_signed_in/players/': {
+      id: '/_signed_in/players/'
+      path: '/players'
+      fullPath: '/players/'
+      preLoaderRoute: typeof Signed_inPlayersIndexRouteImport
       parentRoute: typeof Signed_inRoute
     }
     '/_signed_in/plugins/lobby': {
@@ -250,6 +269,7 @@ interface Signed_inRouteChildren {
   Signed_inPluginsLobbyRoute: typeof Signed_inPluginsLobbyRoute
   Signed_inPluginsMainRoute: typeof Signed_inPluginsMainRoute
   Signed_inPluginsResRoute: typeof Signed_inPluginsResRoute
+  Signed_inPlayersIndexRoute: typeof Signed_inPlayersIndexRoute
   Signed_inRailwayGroupIdRoute: typeof Signed_inRailwayGroupIdRoute
   Signed_inRailwayGroupIndexRoute: typeof Signed_inRailwayGroupIndexRoute
   Signed_inRailwayRailwayIndexRoute: typeof Signed_inRailwayRailwayIndexRoute
@@ -261,6 +281,7 @@ const Signed_inRouteChildren: Signed_inRouteChildren = {
   Signed_inPluginsLobbyRoute: Signed_inPluginsLobbyRoute,
   Signed_inPluginsMainRoute: Signed_inPluginsMainRoute,
   Signed_inPluginsResRoute: Signed_inPluginsResRoute,
+  Signed_inPlayersIndexRoute: Signed_inPlayersIndexRoute,
   Signed_inRailwayGroupIdRoute: Signed_inRailwayGroupIdRoute,
   Signed_inRailwayGroupIndexRoute: Signed_inRailwayGroupIndexRoute,
   Signed_inRailwayRailwayIndexRoute: Signed_inRailwayRailwayIndexRoute,

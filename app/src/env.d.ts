@@ -14,9 +14,18 @@ declare namespace Cloudflare {
          * ローカルは app/.env に置く (.env.example を参照)
          */
         MINEAUTH_SERVICE_TOKEN: string;
+        /**
+         * mc-api の書き込み系 API (`PUT /v1/players/{uuid}` / `POST /v1/players/batch`) の
+         * Bearer トークン。mc-api 側の `ASSIGN_TOKEN` と同じ値で、サーバー側だけで使う。
+         *
+         * 本番へは Deploy ワークフローが `cf deploy --secrets-file` で投入する。
+         * ローカルは app/.env に置く (.env.example を参照)
+         */
+        MC_API_ASSIGN_TOKEN: string;
     }
 }
 
 interface Env {
     MINEAUTH_SERVICE_TOKEN: string;
+    MC_API_ASSIGN_TOKEN: string;
 }
