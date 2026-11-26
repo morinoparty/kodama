@@ -20,11 +20,15 @@
 - MineAuth の API を叩くときは `auth.api.getAccessToken({ body: { useAccountCookie: true }, headers })`
   でアクセストークンを取得してください。失効していれば refresh token で自動更新されます。
 - ユーザー情報は `/oauth2/userinfo` から取得します。ロール (`roles`) で運営権限を判定します。
+- 共有の secret (例: `MC_API_ASSIGN_TOKEN`) を使うサーバー関数には、`app/src/lib/staff-middleware.ts` の
+  `staffMiddleware` を必ず付けてください。`_signed_in` のルートミドルウェアはページのリクエストにしか効かず、
+  サーバー関数の RPC は素通りします。`staffMiddleware` はセッションと、userinfo の `roles` に
+  `staff` があるかをサーバー側で確認します。
 
 ## 環境変数・シークレット
 
-- `CLIENT_ID` / `MAIN_SERVER_URL` / `SERVER_URL` / `SERVERS` は `app/cloudflare.config.ts` の `env` に `bindings.text()` で定義します。
-- `AUTH_SECRET` と `MINEAUTH_SERVICE_TOKEN` は Worker secret (`bindings.secret()`) で、文字列として読み出せます。
+- `CLIENT_ID` / `MAIN_SERVER_URL` / `SERVER_URL` / `SERVERS` / `MC_API_URL` は `app/cloudflare.config.ts` の `env` に `bindings.text()` で定義します。
+- `AUTH_SECRET` / `MINEAUTH_SERVICE_TOKEN` / `MC_API_ASSIGN_TOKEN` は Worker secret (`bindings.secret()`) で、文字列として読み出せます。
   本番へは GitHub secrets から `deploy.yml` が `cf deploy --secrets-file` で渡し、ローカルでは `app/.env` から読みます。
   PR preview には本番の secret が引き継がれないため、Worker `kodama` の Previews Base secret に人が一度だけ登録します (README のデプロイ節を参照)。
 - リダイレクト URI は `<origin>/api/auth/callback/MineAuth` です。

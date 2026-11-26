@@ -48,6 +48,10 @@ const NAV_GROUPS = [
             { title: "駅", to: "/railway/station" },
         ],
     },
+    {
+        title: "プレイヤー",
+        items: [{ title: "mc-api 登録", to: "/players" }],
+    },
 ] as const satisfies readonly NavGroup[];
 
 // フッターに置く参考リンク。運営メンバーがすぐ辿れるようにしておく

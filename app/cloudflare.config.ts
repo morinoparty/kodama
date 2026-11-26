@@ -25,12 +25,17 @@ export default defineConfig({
             SERVER_URL: bindings.text("https://api.morino.party/"),
             // 管理対象サーバーの一覧
             SERVERS: bindings.text("main,res,lobby"),
+            // プレイヤーのプロフィール・スキンを配る mc-api のベース URL (末尾に / を付けない)
+            MC_API_URL: bindings.text("https://mc-api.morinoparty.workers.dev"),
             // 以下は Worker secret。deploy 時に `cf deploy --secrets-file` で渡し、
             // ローカルの cf dev では app/.env (または .dev.vars) から読む
             // Better Auth の署名鍵
             AUTH_SECRET: bindings.secret(),
             // MineAuth のサービスアカウント トークン (MPM などの管理系 API 用)
             MINEAUTH_SERVICE_TOKEN: bindings.secret(),
+            // mc-api の書き込み系 (PUT / POST /v1/players/...) の Bearer トークン。
+            // mc-api 側の ASSIGN_TOKEN と同じ値。サーバー間専用でクライアントには出さない
+            MC_API_ASSIGN_TOKEN: bindings.secret(),
         },
     },
 });

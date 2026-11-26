@@ -74,7 +74,7 @@ jobs:
 
       # cf previews deploy は結果を JSON で標準出力に出す (preview 名は PR のブランチ名)
       # preview は本番の secret を引き継がず、cf previews deploy には --secrets-file も無い。
-      # AUTH_SECRET / MINEAUTH_SERVICE_TOKEN は、Worker kodama の Previews Base secret に
+      # AUTH_SECRET / MINEAUTH_SERVICE_TOKEN / MC_API_ASSIGN_TOKEN は、Worker kodama の Previews Base secret に
       # 人がダッシュボードで一度だけ登録しておく (登録後に作られた preview にだけ入る。README 参照)
       - name: Deploy app preview
         id: deploy-app-preview
